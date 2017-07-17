@@ -35,11 +35,14 @@ p1=df_train.loc[df_index.get_values()]
 df_train2=df_train.set_index(['metric_dict',df_train.index])
 df=df_train2.copy()
 
+#concate target data points
 for i in range(168):
   h=df_train.set_index(['metric_dict',df_train.index+pd.Timedelta(hours=1+i)])['value']
   h=h.rename('h%s' % (i))
   df=pd.concat([df,h],axis=1)
   print df.head()
+
+#concatenate input data points
 for i in range(168):
   p=df_train.set_index(['metric_dict',df_train.index-pd.Timedelta(hours=1+i)])['value']
   p=p.rename('p%s' % (i))
