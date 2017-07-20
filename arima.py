@@ -21,10 +21,9 @@ idx = pd.Index(pd.date_range('2016-01-01', '2017-05-02',freq='5min',closed='left
 
 dta= dta.reindex(idx, fill_value=0)
 #dta.to_csv("telit5minstamp_synth.csv",header = ["datausage"],index_label=["fiveminstamp"])
+
 fitdata=dta['2016-01-01':'2016-01-28']
 diff=fitdata.diff()
-arma_mod2016 = sm.tsa.ARIMA(fitdata,(2,0,2)).fit(disp=True) #lag=2016
-#arma_mod30 = sm.tsa.ARMA(dta, (3,3)).fit(disp=False)
 
 def predict(coef, history):
 	yhat = 0.0
@@ -35,28 +34,46 @@ def smape(yhat,y):
   sMAPE=200*np.mean(np.abs(yhat-y)/(np.abs(yhat)+np.abs(y)))
   return sMAPE
 
-ar_coef, ma_coef = arma_mod2016.arparams, arma_mod2016.maparams
-resid = arma_mod2016.resid
-yhat = predict(ar_coef, fitdata) + predict(ma_coef, resid) # manual forecasting
+#--------------------------seasonal arima------------------------
+#def custom_resampler(array_like):
+#  return array_like[0]
+#mod_list=list()
+#predict=np.empty(288)
+#for i in range(288):
+#  fitdata=fitdata[i:].resample('7D').apply(custom_resampler)
+#  arima_mod = sm.tsa.ARIMA(fitdata,(1,0,1)).fit(disp=True)
+#  mod_list.append(arima_mod)
+#  predict[i]=arma_mod.forecast(steps=1)
+#
+#print(predict)
+#-----------------------------------------------------------------
 
-max_steps=12
+
+
+#ar_coef, ma_coef = arma_mod2016.arparams, arma_mod2016.maparams
+#resid = arma_mod2016.resid
+#yhat = predict(ar_coef, fitdata) + predict(ma_coef, resid) # manual forecasting
+arima_mod = sm.tsa.ARIMA(fitdata,(12,0,12)).fit(disp=True)
+max_steps=288
+smape_list=list()
 for steps in range(max_steps):
   steps=steps+1  # start from 1
-  predict=arma_mod2016.forecast(steps=steps)
+  predict=arima_mod.forecast(steps=steps)
   obs = dta['2016-01-29'][:steps]
   
-  #for i in range(len(predict[0])):
-  #	print('>predicted=%.3f, expected=%.3f' % (predict[0][i], obs[i]))
-  sMAPE=smape(obs,predict[0])
 
+  sMAPE=smape(obs,predict[0])
+  smape_list.append(sMAPE)
   print('Test sMAPE: %.3f' % sMAPE)
 
+#for i in range(len(predict[0])):
+#  print('>predicted=%.3f, expected=%.3f' % (predict[0][i], obs[i]))
 
 fig = plt.figure(figsize=(24,8))
 ax = fig.add_subplot(211)
 #ax2 = fig.add_subplot(212)
-ax = dta.ix['2016-01-29':'2016-01-30'].plot(ax=ax)
+#ax = dta.ix['2016-01-28':'2016-01-29'].plot(ax=ax)
 #ax2 = dta.ix['1700':].plot(ax=ax2)
-fig = arma_mod2016.plot_predict('2016-01-29','2016-01-29', dynamic=True, ax=ax, alpha=0.5,plot_insample=False)
+fig = arima_mod.plot_predict('2016-01-29','2016-01-29', dynamic=True, ax=ax,plot_insample=False)
 #fig = arma_mod30.plot_predict('1900', '2008', dynamic=True, ax=ax2,plot_insample=False)
 plt.show()
