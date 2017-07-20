@@ -53,7 +53,7 @@ def smape(yhat,y):
 #ar_coef, ma_coef = arma_mod2016.arparams, arma_mod2016.maparams
 #resid = arma_mod2016.resid
 #yhat = predict(ar_coef, fitdata) + predict(ma_coef, resid) # manual forecasting
-arima_mod = sm.tsa.ARIMA(fitdata,(12,0,12)).fit(disp=True)
+arima_mod = sm.tsa.ARIMA(fitdata,(3,0,3)).fit(disp=True)
 max_steps=288
 smape_list=list()
 for steps in range(max_steps):
