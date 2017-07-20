@@ -3,7 +3,6 @@ import numpy as np
 from scipy import stats
 import pandas as pd
 import matplotlib.pyplot as plt
-
 import statsmodels.api as sm
 from statsmodels.graphics.api import qqplot
 
@@ -12,7 +11,7 @@ csvdir='./csvdata/telit5minstamp.csv'
 COLUMNS = ["fiveminstamp","value"]
 def dateparse_fn (timestampes):    
   return pd.to_datetime(timestampes,format='%Y-%m-%d %H:%M')
-csvraw = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
+csvraw = pd.read_csv(csvdir, names=COLUMNS, dtype={'value': np.float64}, parse_dates=True,
   date_parser=dateparse_fn,index_col='fiveminstamp',header=0, skipinitialspace=True)
 
 dta=csvraw["value"]
@@ -21,15 +20,43 @@ idx = pd.Index(pd.date_range('2016-01-01', '2017-05-02',freq='5min',closed='left
 #del dta["YEAR"]
 
 dta= dta.reindex(idx, fill_value=0)
-dta.to_csv("telit5minstamp_synth.csv",header = ["datausage"],index_label=["fiveminstamp"])
-fitdata=dta[0:8*2016]
-arma_mod2016 = sm.tsa.ARMA(fitdata, (2016,2016)).fit(disp=False)
+#dta.to_csv("telit5minstamp_synth.csv",header = ["datausage"],index_label=["fiveminstamp"])
+fitdata=dta['2016-01-01':'2016-01-28']
+diff=fitdata.diff()
+arma_mod2016 = sm.tsa.ARIMA(fitdata,(2,0,2)).fit(disp=True) #lag=2016
 #arma_mod30 = sm.tsa.ARMA(dta, (3,3)).fit(disp=False)
+
+def predict(coef, history):
+	yhat = 0.0
+	for i in range(1, len(coef)+1):
+		yhat += coef[i-1] * history[-i]
+	return yhat
+def smape(yhat,y):
+  sMAPE=200*np.mean(np.abs(yhat-y)/(np.abs(yhat)+np.abs(y)))
+  return sMAPE
+
+ar_coef, ma_coef = arma_mod2016.arparams, arma_mod2016.maparams
+resid = arma_mod2016.resid
+yhat = predict(ar_coef, fitdata) + predict(ma_coef, resid) # manual forecasting
+
+max_steps=12
+for steps in range(max_steps):
+  steps=steps+1  # start from 1
+  predict=arma_mod2016.forecast(steps=steps)
+  obs = dta['2016-01-29'][:steps]
+  
+  #for i in range(len(predict[0])):
+  #	print('>predicted=%.3f, expected=%.3f' % (predict[0][i], obs[i]))
+  sMAPE=smape(obs,predict[0])
+
+  print('Test sMAPE: %.3f' % sMAPE)
+
+
 fig = plt.figure(figsize=(24,8))
 ax = fig.add_subplot(211)
 #ax2 = fig.add_subplot(212)
-ax = dta.ix['1700':].plot(ax=ax)
+ax = dta.ix['2016-01-29':'2016-01-30'].plot(ax=ax)
 #ax2 = dta.ix['1700':].plot(ax=ax2)
-fig = arma_mod20.plot_predict(8*2016,8*2016+288, dynamic=True, ax=ax,plot_insample=False)
+fig = arma_mod2016.plot_predict('2016-01-29','2016-01-29', dynamic=True, ax=ax, alpha=0.5,plot_insample=False)
 #fig = arma_mod30.plot_predict('1900', '2008', dynamic=True, ax=ax2,plot_insample=False)
 plt.show()
