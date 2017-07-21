@@ -35,3 +35,38 @@ p1=df_train.loc[df_index.get_values()]
 df_train2=df_train.set_index(['metric_dict',df_train.index])
 df=df_train2.copy()
 
+#concate target data points
+for i in range(168):
+  h=df_train.set_index(['metric_dict',df_train.index+pd.Timedelta(hours=1+i)])['value']
+  h=h.rename('h%s' % (i))
+  df=pd.concat([df,h],axis=1)
+  print df.head()
+
+#concatenate input data points
+for i in range(168):
+  p=df_train.set_index(['metric_dict',df_train.index-pd.Timedelta(hours=1+i)])['value']
+  p=p.rename('p%s' % (i))
+  df=pd.concat([df,p],axis=1)
+  print df.head()
+
+
+#p1=p1.set_index(['metric_dict',p1.index-pd.Timedelta(hours=1)])
+
+
+#for i in metric_dict.values():
+#	aaa=df_train2.loc[i].loc[df_train2.loc[i].index+pd.Timedelta(hours=1)].iloc[:-1]
+#	aaa=aaa.set_index(aaa.index-pd.Timedelta(hours=1))	
+#	bbb=df_train2.loc[i].iloc[:-1]
+#  
+#
+#
+df.loc[idx[:,'2017-2-28'],:]
+idx = pd.IndexSlice
+print df.columns
+#
+#df_train['2017-02']
+#
+#df_train.loc[0, pd.to_datetime('2017-02-01 00:00:00',format='%Y-%m-%d %H')]
+#
+#df_train2.loc[:].loc[pd.to_datetime('2017-02-01 00:00:00',format='%Y-%m-%d %H'),'value']
+
