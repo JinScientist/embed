@@ -76,4 +76,8 @@ ax = fig.add_subplot(211)
 #ax2 = dta.ix['1700':].plot(ax=ax2)
 fig = arima_mod.plot_predict('2016-01-29','2016-01-29', dynamic=True, ax=ax,plot_insample=False)
 #fig = arma_mod30.plot_predict('1900', '2008', dynamic=True, ax=ax2,plot_insample=False)
+<<<<<<< HEAD
 plt.show()
+=======
+plt.show()
+>>>>>>> 8419fa3ea920607a9f3ce0f61b3a130e1f5d2dd5
