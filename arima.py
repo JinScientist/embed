@@ -34,22 +34,39 @@ def smape(yhat,y):
   sMAPE=200*np.mean(np.abs(yhat-y)/(np.abs(yhat)+np.abs(y)))
   return sMAPE
 
+fitdata=dta['2016-01-01':'2016-02-24']  #8 weeks data
 #--------------------------seasonal arima------------------------
 def custom_resampler(array_like):
   return array_like[0]
-fitdata2=dta[:32256]
+fitdata_raw=dta[:'2016-04-21']
+fitdata2=fitdata_raw.apply(np.log) #16 weeks history data
 
-obsev = dta['2016-02-25']
+observ = dta['2016-04-22']
 mod_list=list()
-predict=np.empty(288)
-for i in [87]:
+pred_steps=288
+predict=np.empty(pred_steps)
+average_forcast=np.empty(pred_steps)
+for i in range (pred_steps):
   fitdata_inloop=fitdata2[i:].resample('7D').apply(custom_resampler)
-  arima_mod = sm.tsa.ARIMA(fitdata_inloop,(3,0,0)).fit(disp=False)
-  mod_list.append(arima_mod)
-  nextpoint=arima_mod.forecast(steps=1)[0]
-  predict[i]=nextpoint
-  print('predicted in %sth data point: %.3f' % (i,nextpoint))
-print(predict)
+  fitdata_inloop2=fitdata_raw[i:].resample('7D').apply(custom_resampler)
+  average_forcast[i]=fitdata_inloop2.mean()
+  try:
+    arima_mod = sm.tsa.ARIMA(fitdata_inloop,(3,0,0)).fit(disp=False)
+    mod_list.append(arima_mod)
+    nextpoint=arima_mod.forecast(steps=1)[0]
+    predict[i]=nextpoint
+    print('predicted in %sth data point: %.3f' % (i,nextpoint))
+  except:
+    predict[i]=average_forcast[i]
+    print('No convergence on %sth data point, use average forcast instead: %.3f' % (i,predict[i]))
+  if i == 87:
+    print(fitdata_inloop)
+predict=np.exp(predict)
+observ_slice=observ[:pred_steps]
+sMAPE_seasonal=smape(observ_slice,predict)
+sMAPE_average=smape(observ_slice,average_forcast)
+print('Seasonal arima sMAPE: %.3f,    average forcast sMAPE: %.3f' % (sMAPE_seasonal,sMAPE_average))
+
 #--------------------seasonal arima end line----------------------
 
 
@@ -58,19 +75,17 @@ print(predict)
 #resid = arma_mod2016.resid
 #yhat = predict(ar_coef, fitdata) + predict(ma_coef, resid) # manual forecasting
 #-----------non seasonal mult step forcasting -----------------------
-fitdata=dta['2016-01-01':'2016-02-24']
-arima_mod = sm.tsa.ARIMA(fitdata,(3,0,3)).fit(disp=True)
+arima_mod = sm.tsa.ARIMA(fitdata,(3,0,3)).fit(disp=False)
 max_steps=288
 smape_list=list()
 for steps in range(max_steps):
   steps=steps+1  # start from 1
   predict=arima_mod.forecast(steps=steps)
   obs = dta['2016-02-25'][:steps]
-  
 
   sMAPE=smape(obs,predict[0])
   smape_list.append(sMAPE)
-  print('Test sMAPE: %.3f' % sMAPE)
+  print('Test sMAPE: %.3f when forcasting %s steps' % (sMAPE,steps))
 #-------------multistep end line---------------------------------
 #for i in range(len(predict[0])):
 #  print('>predicted=%.3f, expected=%.3f' % (predict[0][i], obs[i]))
