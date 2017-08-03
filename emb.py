@@ -10,7 +10,9 @@ from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoi
 import pandas as pd
 import datetime
   
-csvdir='./csvdata/telit9metric.csv'
+#The csv file was already synthesized by SQL script  
+csvdir='./csvdata/telit9metric.csv' 
+
 COLUMNS = ["hourstamp", "week", "day_of_week", "metric","value"]
 def dateparse_fn (timestampes):    
   return pd.to_datetime(timestampes,format='%Y-%m-%d %H')
@@ -35,19 +37,27 @@ p1=df_train.loc[df_index.get_values()]
 df_train2=df_train.set_index(['metric_dict',df_train.index])
 df=df_train2.copy()
 
-#concate target data points
-for i in range(168):
-  h=df_train.set_index(['metric_dict',df_train.index+pd.Timedelta(hours=1+i)])['value']
-  h=h.rename('h%s' % (i))
-  df=pd.concat([df,h],axis=1)
-  print df.head()
+#concate input data points
+for i in range(672-1+168):
+  s=df_train.set_index(['metric_dict',df_train.index-pd.Timedelta(hours=1+i)])['value']
+  if i < 671:
+    s=s.rename('h%s' % (i+1))     # input part 
+  else: s=s.rename('p%s' % (i-671))   # target part
+  df=pd.concat([df,s],axis=1)
+  print df.loc[(0,'2017-02-01')]
 
-#concatenate input data points
+# shows a gap in the raw data
+df.loc[(1,slice('2017-01-30 00','2017-01-31 23')),:]
+
+# slice to filter out NaN
+df.loc[(slice(None),slice('2017-02-01 00','2017-04-30 00')),:]
+
+#concatenate target data points
 for i in range(168):
   p=df_train.set_index(['metric_dict',df_train.index-pd.Timedelta(hours=1+i)])['value']
   p=p.rename('p%s' % (i))
   df=pd.concat([df,p],axis=1)
-  print df.head()
+  print df[i+672].head()
 
 
 #p1=p1.set_index(['metric_dict',p1.index-pd.Timedelta(hours=1)])

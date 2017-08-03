@@ -59,8 +59,6 @@ for i in range (pred_steps):
   except:
     predict[i]=average_forcast[i]
     print('No convergence on %sth data point, use average forcast instead: %.3f' % (i,predict[i]))
-  if i == 87:
-    print(fitdata_inloop)
 predict=np.exp(predict)
 observ_slice=observ[:pred_steps]
 sMAPE_seasonal=smape(observ_slice,predict)
