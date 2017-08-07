@@ -20,6 +20,7 @@ df_train = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
   date_parser=dateparse_fn,index_col='hourstamp',header=0, skipinitialspace=True)
 #print df_train
 
+
 #df_train.loc['2017-05-02 23:00:00']
 #df_train['2017-05']
 
@@ -37,20 +38,32 @@ p1=df_train.loc[df_index.get_values()]
 df_train2=df_train.set_index(['metric_dict',df_train.index])
 df=df_train2.copy()
 
+
+df_train.loc[('2017-03-20 04')]  # missing ts value
+
+
+df_empty=pd.DataFrame(data=np.zeros([df_train.index.size,671+168]),index=df.index)
+ser=df_train.loc[:,['metric_dict','value']]
 #concate input data points
 for i in range(672-1+168):
-  s=df_train.set_index(['metric_dict',df_train.index-pd.Timedelta(hours=1+i)])['value']
-  if i < 671:
-    s=s.rename('h%s' % (i+1))     # input part 
-  else: s=s.rename('p%s' % (i-671))   # target part
-  df=pd.concat([df,s],axis=1)
-  print df.loc[(0,'2017-02-01')]
+  s_inloop=ser.set_index(['metric_dict',ser.index-pd.Timedelta(hours=1+i)])
+  #if i < 671:
+  #  s.columns=[('h%s' % (i+1))]     # input part 
+  #else: 
+  #  s.columns=[('p%s' % (i-671))]  # target part
+  df_empty[i]=s_inloop
+  print df_empty.loc[(0,'2017-02-01')]
+df=pd.concat([df,df_empty],axis=1)
+print df.loc[(0,'2017-02-01')]
+# slice to filter out NaN
+idx=pd.IndexSlice
+df.sort_index(inplace=True)
+df_sample=df.loc[idx[:,slice('2017-02-01 00','2017-04-30 00'),:]
 
 # shows a gap in the raw data
-df.loc[(1,slice('2017-01-30 00','2017-01-31 23')),:]
+df_sample2=df.loc[(1,slice('2017-01-30 00','2017-01-31 23')),:]
 
-# slice to filter out NaN
-df.loc[(slice(None),slice('2017-02-01 00','2017-04-30 00')),:]
+
 
 #concatenate target data points
 for i in range(168):
@@ -58,7 +71,7 @@ for i in range(168):
   p=p.rename('p%s' % (i))
   df=pd.concat([df,p],axis=1)
   print df[i+672].head()
-
+q
 
 #p1=p1.set_index(['metric_dict',p1.index-pd.Timedelta(hours=1)])
 
