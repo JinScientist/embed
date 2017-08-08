@@ -19,7 +19,7 @@ def dateparse_fn (timestampes):
 df_train = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
   date_parser=dateparse_fn,index_col='hourstamp',header=0, skipinitialspace=True)
 #print df_train
-
+df_train=df_train[df_train.index<'2017-06-04']
 
 #df_train.loc['2017-05-02 23:00:00']
 #df_train['2017-05']
@@ -31,48 +31,54 @@ for metric in df_train['metric'].unique():
 
 
 df_train.insert(3,'metric_dict',df_train['metric'].map(metric_dict))
+ds=df_train.set_index(['metric_dict',df_train.index]).loc[:,['value']]
 
-df_index=df_train.index+pd.Timedelta(hours=1)
-p1=df_train.loc[df_index.get_values()]
+iterables=[metric_dict.values(),pd.date_range('2017-02-01', '2017-06-04',freq='1h',closed='left')]
+index= pd.MultiIndex.from_product(iterables,names=['metric_dict','hourstamp'])
+df_sy= ds.reindex(index, fill_value=0)
+df_sy['metric_dict']=df_sy.index.get_level_values(0)
+df_sy['dayofweek']=df_sy.index.get_level_values(1).dayofweek
 
-df_train2=df_train.set_index(['metric_dict',df_train.index])
-df=df_train2.copy()
+idx=pd.IndexSlice
+df_sy.sort_index(inplace=True)
+
+df_sy.loc[(0,'2017-03-20 04')]  # check missing value
 
 
-df_train.loc[('2017-03-20 04')]  # missing ts value
-
-
-df_empty=pd.DataFrame(data=np.zeros([df_train.index.size,671+168]),index=df.index)
-ser=df_train.loc[:,['metric_dict','value']]
+df_empty=pd.DataFrame(data=np.zeros([df_sy.index.size,672+168]),index=df_sy.index)
+ser=df_sy.loc[:,['metric_dict','value']]
 #concate input data points
-for i in range(672-1+168):
-  s_inloop=ser.set_index(['metric_dict',ser.index-pd.Timedelta(hours=1+i)])
+for i in range(672+168):
+  s_inloop=ser.set_index(['metric_dict',ser.index.get_level_values(1)-pd.Timedelta(hours=i)])
   #if i < 671:
-  #  s.columns=[('h%s' % (i+1))]     # input part 
+    #s_inloop.columns=[('h%s' % (i+1))]    
   #else: 
-  #  s.columns=[('p%s' % (i-671))]  # target part
+  #  s.columns=[('p%s' % (i-671))]  
   df_empty[i]=s_inloop
   print df_empty.loc[(0,'2017-02-01')]
-df=pd.concat([df,df_empty],axis=1)
+df=pd.concat([df_sy,df_empty],axis=1)
 print df.loc[(0,'2017-02-01')]
 # slice to filter out NaN
-idx=pd.IndexSlice
-df.sort_index(inplace=True)
-df_sample=df.loc[idx[:,slice('2017-02-01 00','2017-04-30 00'),:]
+
+df_sample=df.loc[idx[:,slice('2017-02-01 00','2017-04-30 00')],:]
 
 # shows a gap in the raw data
-df_sample2=df.loc[(1,slice('2017-01-30 00','2017-01-31 23')),:]
+df_sample2=df.loc[(0,slice('2017-01-30 00','2017-01-31 23')),:]
 
+with graph.as_default():
 
+  # Input data.
+  categorical_inputs = tf.placeholder(tf.int32, shape=[batch_size,2])
+  continious_inputs = tf.placeholder(tf.int32, shape=[batch_size,672])
+  train_labels = tf.placeholder(tf.int32, shape=[batch_size, 169])
+  valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
 
-#concatenate target data points
-for i in range(168):
-  p=df_train.set_index(['metric_dict',df_train.index-pd.Timedelta(hours=1+i)])['value']
-  p=p.rename('p%s' % (i))
-  df=pd.concat([df,p],axis=1)
-  print df[i+672].head()
-q
-
+  # Ops and variables pinned to the CPU because of missing GPU implementation
+  with tf.device('/cpu:0'):
+    # Look up embeddings for inputs.
+    metric_embeddings = tf.Variable
+        tf.random_uniform([len(metric_dict), embedding_size], -1.0, 1.0))
+    embed = tf.nn.embedding_lookup(embeddings, categorical_inputs[:,1])
 #p1=p1.set_index(['metric_dict',p1.index-pd.Timedelta(hours=1)])
 
 
