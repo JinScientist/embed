@@ -62,6 +62,11 @@ print df.loc[(0,'2017-02-01')]
 
 #all 9 metric has full tracked ts data with this time window
 df_sample=df.loc[idx[:,slice('2017-02-01 00','2017-04-30 00')],:]   
+df_shuffle=df_sample.sample(n=df_sample.shape[0])
+lag_columns=list(np.arange(672))
+future_columns=list(np.arange(168)+672)
+df_shuffle[0:batch_size].loc[:,lag_columns]      
+df_shuffle[0:batch_size].loc[:,future_columns]
 
 def perc (input,size_in,size_out,act_func,name="perc"):
     with tf.name_scope('weights'):
@@ -102,7 +107,7 @@ with graph.as_default():
   metric_inputs = tf.placeholder(tf.int32, shape=[batch_size])
   ts_inputs = tf.placeholder(tf.float32, shape=[batch_size,lag_size])
   train_labels = tf.placeholder(tf.float32, shape=[batch_size, step_size])
-  metric_dataset = tf.constant(np.arange(len(metric_dict)) dtype=tf.int32) # for valid the embeding learning
+  metric_dataset = tf.constant(np.arange(len(metric_dict)),dtype=tf.int32) # for valid the embeding learning
 
   # Ops and variables pinned to the CPU or GPU
   with tf.device('/cpu:0'):
@@ -151,8 +156,6 @@ def generate_batch(batch_size, num_skips, skip_window):
   labels = np.ndarray(shape=(batch_size, 1), dtype=np.int32)
 num_steps = 100001
 
-......................
-
 
 
 
@@ -167,7 +170,7 @@ with tf.Session(graph=graph) as session:
   average_loss = 0
   for step in xrange(num_steps):
     batch_ts, batch_metric,batch_dayofweek = generate_batch(
-        batch_size, , )                  # generate different batch data for each training step? 
+        batch_size)                  # generate different batch data for each training step? 
     feed_dict = {ts_inputs: batch_ts, metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek, train_labels: batch_labels}
 
     # We perform one update step by evaluating the optimizer op (including it
