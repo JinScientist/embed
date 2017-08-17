@@ -13,11 +13,17 @@ import datetime
 #The csv file was already synthesized by run 'synth9metrics.py'  
 csvdir='./csvdata/telit9metrics_synth.csv' 
 
-df_train = pd.read_csv(csvdir,parse_dates=True,index_col=['metric','hourstamp'],header=0, skipinitialspace=True)
+df_data = pd.read_csv(csvdir,parse_dates=True,index_col=['metric','hourstamp'],header=0, skipinitialspace=True)
+metric_dict={'gtpv1sum': 4, 'imsisum': 6, 'usagesum': 8, 'countUL': 3, 'mapsum': 7, 'gtpv2sum': 5, 'countCL': 0, 'countSAI': 1, 'countUGL': 2}
+reversed_metric_dict = dict(zip(metric_dict.values(), metric_dict.keys()))
+
+dayofweek_dict={'Monday': 0, 'Tuesday': 1, 'Wednsday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+reversed_dayofweek_dict = dict(zip(dayofweek_dict.values(), dayofweek_dict.keys()))
 
 #df_train=df_train.loc[8]
-
-
+idx=pd.IndexSlice
+df_train=df_data.loc[idx[:,slice('2017-02-01 00','2017-03-31 23')],:] 
+df_valid=df_data.loc[idx[:,slice('2017-04-01 00','2017-04-30 00')],:]
 df_shuffle=df_train.sample(n=df_train.shape[0])
 
 lag_columns=list(np.arange(672).astype(str))
@@ -58,7 +64,7 @@ relu_size=8         # relu layer hidden node number connecting to embedding feat
 lag_size=672        # input window size of time series
 sig_size=lag_size+relu_size
 step_size=168
-batch_size=1000
+batch_size=531
 graph = tf.Graph()
 with graph.as_default():
 
@@ -68,9 +74,9 @@ with graph.as_default():
   ts_inputs = tf.placeholder(tf.float32, shape=[None,lag_size])
   train_labels = tf.placeholder(tf.float32, shape=[None, step_size])
   metric_dataset = tf.constant(np.arange(9),dtype=tf.int32) # for valid the embeding learning
-
+  dayofweek_dataset=tf.constant(np.arange(7),dtype=tf.int32)
   # Ops and variables pinned to the CPU or GPU
-  with tf.device('/cpu:0'):
+  with tf.device('/gpu:0'):
     #logarithm normlization
     ts_inputs_log=tf.log(ts_inputs)   #avoid log on algorithm
     train_labels_log=tf.log(train_labels)
@@ -108,65 +114,85 @@ with graph.as_default():
     optimizer_SGD = tf.train.GradientDescentOptimizer(1.0).minimize(l2loss)
     optimizer_ADAM=tf.train.AdamOptimizer(1E-4).minimize(l2loss,global_step=global_step)
   # Compute the cosine similarity between valid dataset and all embeddings.
-  norm = tf.sqrt(tf.reduce_sum(tf.square(metric_embeddings), 1, keep_dims=True))
-  normalized_embeddings = metric_embeddings / norm
-  valid_embeddings = tf.nn.embedding_lookup(
-      normalized_embeddings, metric_dataset)
-  similarity = tf.matmul(
-      valid_embeddings, normalized_embeddings, transpose_b=True)
+
+  # metric embeddings
+  norm_metric = tf.sqrt(tf.reduce_sum(tf.square(metric_embeddings), 1, keep_dims=True))
+  normalized_embeddings_metric = metric_embeddings / norm_metric
+  valid_embeddings_metric = tf.nn.embedding_lookup(
+      normalized_embeddings_metric, metric_dataset)
+  similarity_metric = tf.matmul(
+      valid_embeddings_metric, normalized_embeddings_metric, transpose_b=True)
+
+  # dayofweek embeddings
+  norm_dayofweek = tf.sqrt(tf.reduce_sum(tf.square(dayofweek_embeddings), 1, keep_dims=True))
+  normalized_embeddings_dayofweek = dayofweek_embeddings / norm_dayofweek
+  valid_embeddings_dayofweek = tf.nn.embedding_lookup(
+      normalized_embeddings_dayofweek, dayofweek_dataset)
+  similarity_dayofweek = tf.matmul(
+      valid_embeddings_dayofweek, normalized_embeddings_dayofweek, transpose_b=True)
 
   # Add variable initializer.
   init = tf.global_variables_initializer()
 
 #function to generate training batch from pd frame: df_sample
-data_index = 0
-def generate_batch(batch_size):
-  global data_index
-  assert data_index < df_shuffle.shape[0],"data_index:%s is larger than sample data size" % data_index
-  batch_all=df_shuffle[data_index:data_index+batch_size]
+
+def generate_batch(data,batch_size,data_index):
+  assert data_index < data.shape[0],"data_index:%s is larger than sample data size" % data_index
+  batch_all=data[data_index:data_index+batch_size]
   batch_ts=batch_all.loc[:,lag_columns]  
   batch_metric=batch_all.loc[:,'metric_dict']
   batch_dayofweek=batch_all.loc[:,'dayofweek']
   batch_labels=batch_all.loc[:,future_columns]
-  data_index=data_index+batch_size
   return batch_ts, batch_metric,batch_dayofweek,batch_labels
 
-num_steps = 19
-
+num_steps = 3
 with tf.Session(graph=graph) as session:
   # We must initialize all variables before we use them.
   init.run()
   print('Initialized')
-
+  data_index = 0
   for step in xrange(num_steps):
     batch_ts, batch_metric,batch_dayofweek,batch_labels = generate_batch(
-        batch_size)                  # generate different batch data for each training step? 
-    feed_dict = {ts_inputs: batch_ts, metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek, train_labels: batch_labels}
-    batch_smape=session.run(sMAPError,feed_dict=feed_dict)
-    print 'sMAPE at batch number',step, '  is', batch_smape
+        df_shuffle,batch_size,data_index)
+    data_index=data_index+batch_size                  # generate different batch data for each training step? 
+    feed_train = {ts_inputs: batch_ts, metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek, train_labels: batch_labels}
     # We perform one update step by evaluating the optimizer op (including it
     # in the list of returned values for session.run()
-    for sub_step in xrange(1000):
-      _,loss_val = session.run([optimizer_ADAM,l2loss], feed_dict=feed_dict)
-      if sub_step % 100 == 0:
+    for sub_step in xrange(5000):
+      _,loss_val = session.run([optimizer_ADAM,l2loss], feed_dict=feed_train)
+      if sub_step % 500 == 0:
         print 'loss at step ', step, '  sub-step', sub_step,': ', loss_val
+    # make validation after each batch training
+    valid_ts, valid_metric,valid_dayofweek,valid_labels = generate_batch(
+        df_valid,batch_size=10,data_index=0)
+    feed_valid = {ts_inputs: valid_ts, metric_inputs: valid_metric, dayofweek_inputs:valid_dayofweek, train_labels: valid_labels}
+    batch_smape=session.run(sMAPError,feed_dict=feed_train)
+    print 'sMAPE at batch number',step, '  is', batch_smape
 
 
-    # Note that this is expensive (~20% slowdown if computed every 500 steps)
-    #if step % 10000 == 0:
-    #  sim = similarity.eval()
-    #  for i in xrange(valid_size):
-    #    valid_word = reverse_dictionary[valid_examples[i]]
-    #    top_k = 8  # number of nearest neighbors
-    #    nearest = (-sim[i, :]).argsort()[1:top_k + 1]
-    #    log_str = 'Nearest to %s:' % valid_word
-    #    for k in xrange(top_k):
-    #      close_word = reverse_dictionary[nearest[k]]
-    #      log_str = '%s %s,' % (log_str, close_word)
-    #    print(log_str)
-  final_embeddings = normalized_embeddings.eval()
+  sim_metric = similarity_metric.eval()
+  for i in xrange(9):
+    valid_metric = reversed_metric_dict[i]
+    top_k = 3  # number of nearest neighbors
+    nearest = (-sim_metric[i, :]).argsort()[1:top_k + 1]
+    log_str = 'Nearest to %s:' % valid_metric
+    for k in xrange(top_k):
+      close_word = reversed_metric_dict[nearest[k]]
+      log_str = '%s %s,' % (log_str, close_word)
+    print(log_str)
 
-train_labels_log = session.run(train_labels_log, feed_dict=feed_dict)
+  sim_dayofweek = similarity_dayofweek.eval()
+  for i in xrange(7):
+    valid_dayofweek = reversed_dayofweek_dict[i]
+    top_k = 3  # number of nearest neighbors
+    nearest = (-sim_dayofweek[i, :]).argsort()[1:top_k + 1]
+    log_str = 'Nearest to %s:' % valid_dayofweek
+    for k in xrange(top_k):
+      close_word = reversed_dayofweek_dict[nearest[k]]
+      log_str = '%s %s,' % (log_str, close_word)
+    print(log_str)
+  #final_embeddings = normalized_embeddings.eval()
+
 
 
 
