@@ -5,7 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from statsmodels.graphics.api import qqplot
-
+import datetime
+import pdb
 #dta = sm.datasets.sunspots.load_pandas().data
 csvdir='./csvdata/telit5minstamp.csv'
 COLUMNS = ["fiveminstamp","value"]
@@ -33,38 +34,40 @@ def predict(coef, history):
 def smape(yhat,y):
   sMAPE=200*np.mean(np.abs(yhat-y)/(np.abs(yhat)+np.abs(y)))
   return sMAPE
-
-fitdata=dta['2016-01-01':'2016-02-24']  #8 weeks data
+last_timestamp=dateparse_fn('2015-12-31 23:55')+pd.Timedelta(weeks=48,days=7)
+fitdata=dta['2016-01-01':last_timestamp]  #8 weeks data
 #--------------------------seasonal arima------------------------
 def custom_resampler(array_like):
   return array_like[0]
-fitdata_raw=dta[:'2016-04-21']
-fitdata2=fitdata_raw.apply(np.log) #16 weeks history data
+fitdata_raw=fitdata  #16 weeks history data
+fitdata_norm=fitdata_raw.apply(np.log) #  normalized data(results showed that this is not necessary)
 
-observ = dta['2016-04-22']
+observ = dta[last_timestamp+pd.Timedelta(minutes=5):last_timestamp+pd.Timedelta(days=1)]
 mod_list=list()
 pred_steps=288
-predict=np.empty(pred_steps)
-average_forcast=np.empty(pred_steps)
+predict=np.empty(pred_steps)    # try using arima for seasonal data
+predict_ssv=np.empty(pred_steps)  # sav:  simple seasonal average
 for i in range (pred_steps):
-  fitdata_inloop=fitdata2[i:].resample('7D').apply(custom_resampler)
-  fitdata_inloop2=fitdata_raw[i:].resample('7D').apply(custom_resampler)
-  average_forcast[i]=fitdata_inloop2.mean()
+  fitdata_inloop=fitdata_raw[i:].resample('7D').apply(custom_resampler)
+  #fitdata_inloop=fitdata_raw[i:].resample('7D').apply(custom_resampler)
+  predict_ssv[i]=fitdata_inloop.mean()
   try:
-    arima_mod = sm.tsa.ARIMA(fitdata_inloop,(3,0,0)).fit(disp=False)
+    arima_mod = sm.tsa.ARIMA(fitdata_inloop,(3,1,0)).fit(disp=False)
     mod_list.append(arima_mod)
     nextpoint=arima_mod.forecast(steps=1)[0]
     predict[i]=nextpoint
     print('predicted in %sth data point: %.3f' % (i,nextpoint))
   except:
-    predict[i]=average_forcast[i]
+    predict[i]=predict_ssv[i]
     print('No convergence on %sth data point, use average forcast instead: %.3f' % (i,predict[i]))
-predict=np.exp(predict)
+#predict=np.exp(predict)
 observ_slice=observ[:pred_steps]
 sMAPE_seasonal=smape(observ_slice,predict)
-sMAPE_average=smape(observ_slice,average_forcast)
-print('Seasonal arima sMAPE: %.3f,    average forcast sMAPE: %.3f' % (sMAPE_seasonal,sMAPE_average))
+sMAPE_average=smape(observ_slice,predict_ssv)
+print('Seasonal arima sMAPE: %.3f,    simple seasonal average sMAPE: %.3f' % (sMAPE_seasonal,sMAPE_average))
 
+
+pdb.set_trace()
 #--------------------seasonal arima end line----------------------
 
 
