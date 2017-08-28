@@ -45,6 +45,42 @@ df_sy.sort_index(inplace=True)
 df_sy.loc[(0,'2017-03-20 04')]  # check missing value
 
 
+#post to elastic search
+
+from datetime import datetime
+from elasticsearch import Elasticsearch
+import certifi
+import json
+import requests
+es = Elasticsearch(
+    ['https://c34d6f2275e9c550006404f8188c2e61.eu-west-1.aws.found.io:9243'],
+    http_auth=('elastic', 'Y7j8qXoqXP5FUuXzwCCckD39'),
+    port=443,
+    use_ssl=True
+)
+df=df_sy.loc[idx[:,slice('2017-02-01 00','2017-04-30 00')],:]
+df.reset_index(inplace=True)
+df_as_json = df.to_json(orient='records', lines=True)
+
+final_json_string = ''
+for json_document in df_as_json.split('\n'):
+    jdict = json.loads(json_document)
+    metadata = json.dumps({'index': 
+      {'_id': str(jdict['metric'])+'_'+str(jdict['hourstamp'])}
+      })
+
+    jdict.pop('metric')
+    final_json_string += metadata + '\n' + json.dumps(jdict) + '\n'
+
+
+headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+
+r = requests.post('https://c34d6f2275e9c550006404f8188c2e61.eu-west-1.aws.found.io:9243/test-index/first-type/_bulk', auth=('elastic', 'Y7j8qXoqXP5FUuXzwCCckD39'),data=final_json_string, headers=headers, timeout=60)
+
+
+print df_json
+
+# transorm to Neural Nets features
 df_empty=pd.DataFrame(data=np.zeros([df_sy.index.size,672+168]),index=df_sy.index)
 ser=df_sy.loc[:,['value']]
 #concate input data points
