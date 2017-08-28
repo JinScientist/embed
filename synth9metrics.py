@@ -19,10 +19,9 @@ def dateparse_fn (timestampes):
 df_train = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
   date_parser=dateparse_fn,index_col='hourstamp',header=0, skipinitialspace=True)
 
+
 # avoid zero value for logrithm normalization later
 df_train=df_train[df_train.index<'2017-06-04'].replace(0,np.finfo(np.float32).eps)
-#df_train.loc['2017-05-02 23:00:00']
-#df_train['2017-05']
 
 #create dictionary for metric colomn:
 metric_dict = dict()
@@ -42,43 +41,8 @@ df_sy['dayofweek']=df_sy.index.get_level_values(1).dayofweek
 idx=pd.IndexSlice
 df_sy.sort_index(inplace=True)
 
-df_sy.loc[(0,'2017-03-20 04')]  # check missing value
+#df_sy.loc[(0,'2017-03-20 04')]  # check missing value
 
-
-#post to elastic search
-
-from datetime import datetime
-from elasticsearch import Elasticsearch
-import certifi
-import json
-import requests
-es = Elasticsearch(
-    ['https://c34d6f2275e9c550006404f8188c2e61.eu-west-1.aws.found.io:9243'],
-    http_auth=('elastic', 'Y7j8qXoqXP5FUuXzwCCckD39'),
-    port=443,
-    use_ssl=True
-)
-df=df_sy.loc[idx[:,slice('2017-02-01 00','2017-04-30 00')],:]
-df.reset_index(inplace=True)
-df_as_json = df.to_json(orient='records', lines=True)
-
-final_json_string = ''
-for json_document in df_as_json.split('\n'):
-    jdict = json.loads(json_document)
-    metadata = json.dumps({'index': 
-      {'_id': str(jdict['metric'])+'_'+str(jdict['hourstamp'])}
-      })
-
-    jdict.pop('metric')
-    final_json_string += metadata + '\n' + json.dumps(jdict) + '\n'
-
-
-headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-
-r = requests.post('https://c34d6f2275e9c550006404f8188c2e61.eu-west-1.aws.found.io:9243/test-index/first-type/_bulk', auth=('elastic', 'Y7j8qXoqXP5FUuXzwCCckD39'),data=final_json_string, headers=headers, timeout=60)
-
-
-print df_json
 
 # transorm to Neural Nets features
 df_empty=pd.DataFrame(data=np.zeros([df_sy.index.size,672+168]),index=df_sy.index)
