@@ -33,7 +33,6 @@ print df_json
 es = Elasticsearch(
     ['https://c34d6f2275e9c550006404f8188c2e61.eu-west-1.aws.found.io:9243'],
     http_auth=('elastic', 'Y7j8qXoqXP5FUuXzwCCckD39'),
-    port=443,
     use_ssl=True
 )
 

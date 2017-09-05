@@ -21,7 +21,7 @@ df_train = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
 
 
 # avoid zero value for logrithm normalization later
-df_train=df_train[df_train.index<'2017-06-04'].replace(0,np.finfo(np.float32).eps)
+df_train['value']=df_train['value'].replace(0,np.finfo(np.float32).eps)
 
 #create dictionary for metric colomn:
 metric_dict = dict()
