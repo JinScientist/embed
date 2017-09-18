@@ -1,0 +1,210 @@
+29    Södertörns Fjärrvärme AB
+Name: accountname, dtype: object
+df_data shape: (1632800, 844)
+Initialized
+batch number 0 is generated
+loss at step  0   sub-step 0 :  5.97328e+07
+sMAPE at batch number 0   is 118.693
+batch number 1 is generated
+loss at step  1   sub-step 0 :  6.68641e+06
+sMAPE at batch number 1   is 71.3663
+batch number 2 is generated
+loss at step  2   sub-step 0 :  4.60133e+06
+sMAPE at batch number 2   is 51.1414
+batch number 3 is generated
+loss at step  3   sub-step 0 :  4.35114e+06
+sMAPE at batch number 3   is 43.6523
+batch number 4 is generated
+loss at step  4   sub-step 0 :  4.17218e+06
+sMAPE at batch number 4   is 40.2809
+batch number 5 is generated
+loss at step  5   sub-step 0 :  4.1495e+06
+sMAPE at batch number 5   is 38.4649
+batch number 6 is generated
+loss at step  6   sub-step 0 :  3.83296e+06
+sMAPE at batch number 6   is 37.1488
+batch number 7 is generated
+loss at step  7   sub-step 0 :  3.94758e+06
+sMAPE at batch number 7   is 36.5486
+batch number 8 is generated
+loss at step  8   sub-step 0 :  3.6302e+06
+sMAPE at batch number 8   is 36.0227
+batch number 9 is generated
+loss at step  9   sub-step 0 :  3.7165e+06
+sMAPE at batch number 9   is 35.2694
+batch number 10 is generated
+loss at step  10   sub-step 0 :  3.52588e+06
+sMAPE at batch number 10   is 34.9816
+batch number 11 is generated
+loss at step  11   sub-step 0 :  3.61461e+06
+sMAPE at batch number 11   is 34.3948
+batch number 12 is generated
+loss at step  12   sub-step 0 :  3.5086e+06
+sMAPE at batch number 12   is 34.6892
+batch number 13 is generated
+loss at step  13   sub-step 0 :  3.5973e+06
+sMAPE at batch number 13   is 34.1655
+batch number 14 is generated
+loss at step  14   sub-step 0 :  3.9687e+06
+sMAPE at batch number 14   is 33.3273
+batch number 15 is generated
+loss at step  15   sub-step 0 :  3.85578e+06
+sMAPE at batch number 15   is 32.8493
+batch number 16 is generated
+loss at step  16   sub-step 0 :  3.52809e+06
+sMAPE at batch number 16   is 32.9785
+batch number 17 is generated
+loss at step  17   sub-step 0 :  3.67583e+06
+sMAPE at batch number 17   is 32.7731
+batch number 18 is generated
+loss at step  18   sub-step 0 :  3.5147e+06
+sMAPE at batch number 18   is 32.953
+batch number 19 is generated
+loss at step  19   sub-step 0 :  3.57095e+06
+sMAPE at batch number 19   is 32.3757
+batch number 20 is generated
+loss at step  20   sub-step 0 :  3.58971e+06
+sMAPE at batch number 20   is 32.4106
+batch number 21 is generated
+loss at step  21   sub-step 0 :  3.92253e+06
+sMAPE at batch number 21   is 32.5631
+batch number 22 is generated
+loss at step  22   sub-step 0 :  3.70443e+06
+sMAPE at batch number 22   is 32.8199
+batch number 23 is generated
+loss at step  23   sub-step 0 :  3.58139e+06
+sMAPE at batch number 23   is 32.8818
+batch number 24 is generated
+loss at step  24   sub-step 0 :  3.76767e+06
+sMAPE at batch number 24   is 32.6301
+batch number 25 is generated
+loss at step  25   sub-step 0 :  3.80621e+06
+sMAPE at batch number 25   is 32.5119
+batch number 26 is generated
+loss at step  26   sub-step 0 :  3.52761e+06
+sMAPE at batch number 26   is 32.8819
+batch number 27 is generated
+loss at step  27   sub-step 0 :  3.53167e+06
+sMAPE at batch number 27   is 32.8716
+batch number 28 is generated
+loss at step  28   sub-step 0 :  3.68615e+06
+sMAPE at batch number 28   is 32.6201
+batch number 29 is generated
+loss at step  29   sub-step 0 :  3.77557e+06
+sMAPE at batch number 29   is 33.0578
+batch number 30 is generated
+loss at step  30   sub-step 0 :  3.61012e+06
+sMAPE at batch number 30   is 32.7754
+batch number 31 is generated
+loss at step  31   sub-step 0 :  3.59972e+06
+sMAPE at batch number 31   is 32.4935
+batch number 32 is generated
+loss at step  32   sub-step 0 :  3.62031e+06
+sMAPE at batch number 32   is 32.4928
+batch number 33 is generated
+loss at step  33   sub-step 0 :  3.69016e+06
+sMAPE at batch number 33   is 32.6663
+batch number 34 is generated
+loss at step  34   sub-step 0 :  3.65882e+06
+sMAPE at batch number 34   is 32.5117
+batch number 35 is generated
+loss at step  35   sub-step 0 :  3.5725e+06
+sMAPE at batch number 35   is 32.8189
+batch number 36 is generated
+loss at step  36   sub-step 0 :  3.71786e+06
+sMAPE at batch number 36   is 32.8633
+batch number 37 is generated
+loss at step  37   sub-step 0 :  3.78513e+06
+sMAPE at batch number 37   is 33.0156
+batch number 38 is generated
+loss at step  38   sub-step 0 :  3.81e+06
+sMAPE at batch number 38   is 32.569
+batch number 39 is generated
+loss at step  39   sub-step 0 :  3.72654e+06
+sMAPE at batch number 39   is 32.9612
+batch number 40 is generated
+loss at step  40   sub-step 0 :  3.53147e+06
+sMAPE at batch number 40   is 32.7542
+batch number 41 is generated
+loss at step  41   sub-step 0 :  3.61396e+06
+sMAPE at batch number 41   is 32.363
+batch number 42 is generated
+loss at step  42   sub-step 0 :  3.55723e+06
+sMAPE at batch number 42   is 32.8754
+batch number 43 is generated
+loss at step  43   sub-step 0 :  3.40573e+06
+sMAPE at batch number 43   is 33.0147
+batch number 44 is generated
+loss at step  44   sub-step 0 :  3.57743e+06
+sMAPE at batch number 44   is 33.313
+batch number 45 is generated
+loss at step  45   sub-step 0 :  3.58375e+06
+sMAPE at batch number 45   is 32.6663
+batch number 46 is generated
+loss at step  46   sub-step 0 :  3.66187e+06
+sMAPE at batch number 46   is 32.4
+batch number 47 is generated
+loss at step  47   sub-step 0 :  3.79472e+06
+sMAPE at batch number 47   is 32.4508
+batch number 48 is generated
+loss at step  48   sub-step 0 :  3.80489e+06
+sMAPE at batch number 48   is 32.6678
+batch number 49 is generated
+loss at step  49   sub-step 0 :  3.4623e+06
+sMAPE at batch number 49   is 32.561
+batch number 50 is generated
+loss at step  50   sub-step 0 :  3.6154e+06
+sMAPE at batch number 50   is 32.8996
+batch number 51 is generated
+loss at step  51   sub-step 0 :  3.77236e+06
+sMAPE at batch number 51   is 32.4539
+batch number 52 is generated
+loss at step  52   sub-step 0 :  3.57691e+06
+sMAPE at batch number 52   is 32.3878
+batch number 53 is generated
+loss at step  53   sub-step 0 :  3.44606e+06
+sMAPE at batch number 53   is 32.537
+batch number 54 is generated
+loss at step  54   sub-step 0 :  3.77877e+06
+sMAPE at batch number 54   is 33.1955
+batch number 55 is generated
+loss at step  55   sub-step 0 :  3.94525e+06
+sMAPE at batch number 55   is 32.7379
+batch number 56 is generated
+loss at step  56   sub-step 0 :  3.51562e+06
+sMAPE at batch number 56   is 32.8322
+batch number 57 is generated
+loss at step  57   sub-step 0 :  3.77431e+06
+sMAPE at batch number 57   is 32.4366
+batch number 58 is generated
+loss at step  58   sub-step 0 :  3.65549e+06
+sMAPE at batch number 58   is 32.8469
+batch number 59 is generated
+loss at step  59   sub-step 0 :  3.87001e+06
+sMAPE at batch number 59   is 32.9349
+batch number 60 is generated
+loss at step  60   sub-step 0 :  3.76778e+06
+sMAPE at batch number 60   is 33.3722
+batch number 61 is generated
+loss at step  61   sub-step 0 :  3.83608e+06
+sMAPE at batch number 61   is 32.5907
+batch number 62 is generated
+loss at step  62   sub-step 0 :  3.73825e+06
+sMAPE at batch number 62   is 33.287
+batch number 63 is generated
+loss at step  63   sub-step 0 :  3.52467e+06
+sMAPE at batch number 63   is 32.7239
+batch number 64 is generated
+loss at step  64   sub-step 0 :  3.64312e+06
+sMAPE at batch number 64   is 32.8449
+batch number 65 is generated
+loss at step  65   sub-step 0 :  3.58143e+06
+sMAPE at batch number 65   is 32.3949
+batch number 66 is generated
+loss at step  66   sub-step 0 :  3.80294e+06
+sMAPE at batch number 66   is 32.9963
+batch number 67 is generated
+loss at step  67   sub-step 0 :  3.59229e+06
+sMAPE at batch number 67   is 32.6028
+batch number 68 is generated
+loss at step  68   sub-step 0 :  3.65623e+06
