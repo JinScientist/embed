@@ -64,13 +64,16 @@ relu_size=8         # relu layer hidden node number connecting to embedding feat
 lag_size=672        # input window size of time series
 sig_size=lag_size+relu_size
 step_size=168
-batch_size=531
+batch_size=1000
+epoch=20000
+num_steps = 10
+
 graph = tf.Graph()
 with graph.as_default():
 
   # Input data.
-  dayofweek_inputs=tf.placeholder(tf.int32, shape=[batch_size])
-  metric_inputs = tf.placeholder(tf.int32, shape=[batch_size])
+  dayofweek_inputs=tf.placeholder(tf.int32, shape=[None])
+  metric_inputs = tf.placeholder(tf.int32, shape=[None])
   ts_inputs = tf.placeholder(tf.float32, shape=[None,lag_size])
   train_labels = tf.placeholder(tf.float32, shape=[None, step_size])
   metric_dataset = tf.constant(np.arange(9),dtype=tf.int32) # for valid the embeding learning
@@ -145,7 +148,6 @@ def generate_batch(data,batch_size,data_index):
   batch_labels=batch_all.loc[:,future_columns]
   return batch_ts, batch_metric,batch_dayofweek,batch_labels
 
-num_steps = 3
 with tf.Session(graph=graph) as session:
   # We must initialize all variables before we use them.
   init.run()
@@ -158,7 +160,7 @@ with tf.Session(graph=graph) as session:
     feed_train = {ts_inputs: batch_ts, metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek, train_labels: batch_labels}
     # We perform one update step by evaluating the optimizer op (including it
     # in the list of returned values for session.run()
-    for sub_step in xrange(5000):
+    for sub_step in xrange(epoch):
       _,loss_val = session.run([optimizer_ADAM,l2loss], feed_dict=feed_train)
       if sub_step % 500 == 0:
         print 'loss at step ', step, '  sub-step', sub_step,': ', loss_val
@@ -166,7 +168,7 @@ with tf.Session(graph=graph) as session:
     valid_ts, valid_metric,valid_dayofweek,valid_labels = generate_batch(
         df_valid,batch_size=10,data_index=0)
     feed_valid = {ts_inputs: valid_ts, metric_inputs: valid_metric, dayofweek_inputs:valid_dayofweek, train_labels: valid_labels}
-    batch_smape=session.run(sMAPError,feed_dict=feed_train)
+    batch_smape=session.run(sMAPError,feed_dict=feed_valid)
     print 'sMAPE at batch number',step, '  is', batch_smape
 
 

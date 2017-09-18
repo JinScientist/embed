@@ -35,7 +35,7 @@ df_train.insert(3,'metric_dict',df_train['metric'].map(metric_dict))
 ds=df_train.set_index(['accountid','metric_dict',df_train.index]).loc[:,['value']]
 
 #fill up empty rows in the time series
-iterables=[accountid_array,metric_dict.values(),pd.date_range('2017-02-01', '2017-06-04',freq='1h',closed='left')]
+iterables=[accountid_array,metric_dict.values(),pd.date_range('2017-05-01', '2017-08-31',freq='1h',closed='left')]
 index= pd.MultiIndex.from_product(iterables,names=['accountid_idx','metric_idx','hourstamp'])
 df_sy= ds.reindex(index, fill_value=np.finfo(np.float32).eps)
 df_sy['accountid']=df_sy.index.get_level_values(0)
@@ -45,6 +45,7 @@ df_sy['dayofweek']=df_sy.index.get_level_values(2).dayofweek
 idx=pd.IndexSlice
 df_sy.sort_index(inplace=True)
 
+#df_sy=df.loc[idx[:,:,slice('2017-05-01 00','2017-05-25 00')],:]
 #df_sy.loc[(0,'2017-03-20 04')]  # check missing value
 
 
@@ -59,12 +60,15 @@ for i in range(672+168):
   #else: 
   #  s.columns=[('p%s' % (i-671))]  
   df_empty[i]=s_inloop
-  print df_empty.loc[(109351305,0,'2017-05-01')] # telit id
+  print df_empty.loc[(109351305,1,'2017-05-01')] # telit id
 df=pd.concat([df_sy,df_empty],axis=1)
-print df.loc[(109351305,0,'2017-05-01')]
+print df.loc[(109351305,1,'2017-05-01')]
 # slice to filter out NaN
 
 #all 9 metric has full tracked ts data with this time window
-df_sample=df.loc[idx[:,:,slice('2017-05-01 00','2017-08-31 00')],:]   
+df=df.drop('value',axis=1)
+df_sample=df.loc[idx[:,:,slice('2017-05-01 00','2017-06-20 23')],:]   
+df_valid=df.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]  
 
-df_sample.to_csv("./csvdata/allacc8metrics_synth.csv")
+df_sample.to_csv("./csvdata/allacc8metrics_synth_train.csv")
+df_valid.to_csv("./csvdata/allacc8metrics_synth_valid.csv")
