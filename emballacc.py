@@ -1,4 +1,4 @@
-#train with accountid, metric and dayofweek as embedding features
+#train with accountid, metric and dayofweek as embedding features.
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #Hide messy TensorFlow warnings
 import tensorflow as tf
@@ -38,6 +38,9 @@ reversed_dayofweek_dict = dict(zip(dayofweek_dict.values(), dayofweek_dict.keys(
 idx=pd.IndexSlice
 df_train=df_data.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
 df_valid=df_data.loc[idx[109351305,:,slice('2017-07-01 00','2017-07-07 23')],:] # Telit
+
+#df_valid=df_data.loc[idx[125180206,:,slice('2017-07-01 00','2017-07-07 23')],:] # M2M Services B.V
+
 df_shuffle=df_train.sample(n=df_train.shape[0])
 
 lag_columns=list(np.arange(672).astype(str))
@@ -52,9 +55,9 @@ relu_size=12         # relu layer hidden node number connecting to embedding fea
 lag_size=672        # input window size of time series
 sig_size=lag_size+relu_size
 step_size=168
-batch_size=1000
-num_steps = 30
-epoch=20000
+batch_size=19200  # total sample size 134400 per week
+num_steps = 7   
+epoch=4000
 
 def perc (input,size_in,size_out,act_func,name="perc"):
     with tf.name_scope('weights'):
@@ -89,9 +92,9 @@ graph = tf.Graph()
 with graph.as_default():
 
   # Input data.
-  accountid_inputs=tf.placeholder(tf.int32, shape=[batch_size])
-  dayofweek_inputs=tf.placeholder(tf.int32, shape=[batch_size])
-  metric_inputs = tf.placeholder(tf.int32, shape=[batch_size])
+  accountid_inputs=tf.placeholder(tf.int32, shape=[None])
+  dayofweek_inputs=tf.placeholder(tf.int32, shape=[None])
+  metric_inputs = tf.placeholder(tf.int32, shape=[None])
   ts_inputs = tf.placeholder(tf.float32, shape=[None,lag_size])
   train_labels = tf.placeholder(tf.float32, shape=[None, step_size])
 
@@ -184,7 +187,9 @@ with tf.Session(graph=graph) as session:
   data_index = 0
   #pre generate the validation batch
   valid_ts,valid_accountid, valid_metric,valid_dayofweek,valid_labels = generate_batch(
-    df_valid,batch_size=batch_size,data_index=0)
+    df_valid,batch_size=df_valid.shape[0],data_index=0)
+  feed_valid = {ts_inputs: valid_ts, accountid_inputs: valid_accountid, metric_inputs: valid_metric, dayofweek_inputs:valid_dayofweek, train_labels: valid_labels}
+  #Train start
   for step in xrange(num_steps):
     batch_ts,batch_accountid,batch_metric,batch_dayofweek,batch_labels = generate_batch(
         df_shuffle,batch_size,data_index)
@@ -195,13 +200,9 @@ with tf.Session(graph=graph) as session:
     # in the list of returned values for session.run()
     for sub_step in xrange(epoch):
       _,loss_val = session.run([optimizer_ADAM,l2loss], feed_dict=feed_train)
-      if sub_step % 500 == 0:
-        print 'loss at step ', step, '  sub-step', sub_step,': ', loss_val
-    # make validation after each batch training
-
-    feed_valid = {ts_inputs: valid_ts, accountid_inputs: valid_accountid, metric_inputs: valid_metric, dayofweek_inputs:valid_dayofweek, train_labels: valid_labels}
-    batch_smape=session.run(sMAPError,feed_dict=feed_valid)
-    print 'sMAPE at batch number',step, '  is', batch_smape
+      if sub_step % 100 == 0:
+        batch_smape=session.run(sMAPError,feed_dict=feed_valid)
+        print 'loss at step ', step, '  sub-step', sub_step,': ', loss_val,'  sMAPE is ', batch_smape
 
 
   #save the model
@@ -214,7 +215,7 @@ with tf.Session(graph=graph) as session:
   print("Tained model %s saved in file:%s" % (MODELNAME,save_path))
 
   sim_metric = similarity_metric.eval()
-  for i in xrange(9):
+  for i in xrange(8):
     valid_metric = reversed_metric_dict[i]
     top_k = 3  # number of nearest neighbors
     nearest = (-sim_metric[i, :]).argsort()[1:top_k + 1]

@@ -23,10 +23,10 @@ df_train = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
 # avoid zero value for logrithm normalization later
 df_train['value']=df_train['value'].replace(0,np.finfo(np.float32).eps)
 #create dictionary for accountid colomn:
-metric_dict = dict()
-for metric in df_train['metric'].unique():
-  metric_dict[metric] = len(metric_dict)
-
+#metric_dict = dict()
+#for metric in df_train['metric'].unique():
+# metric_dict[metric] = len(metric_dict)
+metric_dict={'gtpv1sum': 4, 'imsisum': 6, 'countUL': 3, 'mapsum': 7, 'gtpv2sum': 5, 'countCL': 0, 'countSAI': 1, 'countUGL': 2}
 
 accountid_array=df_train['accountid'].unique()
 
