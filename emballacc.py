@@ -37,9 +37,10 @@ reversed_dayofweek_dict = dict(zip(dayofweek_dict.values(), dayofweek_dict.keys(
 #df_train=df_train.loc[8]
 idx=pd.IndexSlice
 df_train=df_data.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
-df_valid=df_data.loc[idx[109351305,:,slice('2017-07-01 00','2017-07-07 23')],:] # Telit
 
-#df_valid=df_data.loc[idx[125180206,:,slice('2017-07-01 00','2017-07-07 23')],:] # M2M Services B.V
+df_valid=df_data.loc[idx[109351305,:,slice('2017-07-01 00','2017-07-07 23')],:] # Telit
+#df_valid=df_data.loc[idx[118035406,:,slice('2017-07-01 00','2017-07-07 23')],:] # Latvi Energo
+#df_valid=df_data.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]
 
 df_shuffle=df_train.sample(n=df_train.shape[0])
 
@@ -55,9 +56,9 @@ relu_size=12         # relu layer hidden node number connecting to embedding fea
 lag_size=672        # input window size of time series
 sig_size=lag_size+relu_size
 step_size=168
-batch_size=19200  # total sample size 134400 per week
-num_steps = 7   
-epoch=4000
+batch_size=26880  # total sample size 134400 per week
+num_steps = 5  
+epoch=2000
 
 def perc (input,size_in,size_out,act_func,name="perc"):
     with tf.name_scope('weights'):
@@ -203,6 +204,7 @@ with tf.Session(graph=graph) as session:
       if sub_step % 100 == 0:
         batch_smape=session.run(sMAPError,feed_dict=feed_valid)
         print 'loss at step ', step, '  sub-step', sub_step,': ', loss_val,'  sMAPE is ', batch_smape
+        if batch_smape<10.5:break #break for each batch,make sure all batch is learnt
 
 
   #save the model
