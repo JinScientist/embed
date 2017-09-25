@@ -167,8 +167,15 @@ with graph.as_default():
 
   # Add variable initializer.
   init = tf.global_variables_initializer()
-  tf.add_to_collection('pred',target_unnorm)
-#function to generate training batch from pd frame: df_sample
+  tf.add_to_collection('pred',target_unnorm)  
+  tf.add_to_collection('sMAPError',sMAPError)
+
+  tf.add_to_collection('accountid_inputs',accountid_inputs)
+  tf.add_to_collection('dayofweek_inputs',dayofweek_inputs)
+  tf.add_to_collection('metric_inputs',metric_inputs)
+
+  tf.add_to_collection('ts_inputs',ts_inputs)
+  tf.add_to_collection('train_labels',train_labels)
 
 def generate_batch(data,batch_size,data_index):
   assert data_index < data.shape[0],"data_index:%s is larger than sample data size" % data_index
@@ -244,22 +251,5 @@ with tf.Session(graph=graph) as session:
 
 
 
-#p1=p1.set_index(['metric_dict',p1.index-pd.Timedelta(hours=1)])
 
-
-#for i in metric_dict.values():
-#	aaa=df_train2.loc[i].loc[df_train2.loc[i].index+pd.Timedelta(hours=1)].iloc[:-1]
-#	aaa=aaa.set_index(aaa.index-pd.Timedelta(hours=1))	
-#	bbb=df_train2.loc[i].iloc[:-1]
-#  
-#
-#
-#df.loc[idx[:,'2017-2-28'],:]
-
-#
-#df_train['2017-02']
-#
-#df_train.loc[0, pd.to_datetime('2017-02-01 00:00:00',format='%Y-%m-%d %H')]
-#
-#df_train2.loc[:].loc[pd.to_datetime('2017-02-01 00:00:00',format='%Y-%m-%d %H'),'value']
 
