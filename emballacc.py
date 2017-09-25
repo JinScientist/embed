@@ -167,7 +167,7 @@ with graph.as_default():
 
   # Add variable initializer.
   init = tf.global_variables_initializer()
-
+  tf.add_to_collection('pred',target_unnorm)
 #function to generate training batch from pd frame: df_sample
 
 def generate_batch(data,batch_size,data_index):
@@ -209,11 +209,12 @@ with tf.Session(graph=graph) as session:
 
   #save the model
   MODELNAME='a100-8metrics'
+  RUN=0
   checkpoint_path_trained='./models/'+MODELNAME+'/'
   if not os.path.exists(checkpoint_path_trained):
     os.makedirs(checkpoint_path_trained)
   saver=tf.train.Saver()
-  save_path=saver.save(session,checkpoint_path_trained)
+  save_path=saver.save(session,checkpoint_path_trained+str(RUN))
   print("Tained model %s saved in file:%s" % (MODELNAME,save_path))
 
   sim_metric = similarity_metric.eval()
