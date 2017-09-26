@@ -28,7 +28,7 @@ df_data = pd.read_csv(csvdir_data,parse_dates=True,index_col=['accountid_idx','m
 
 print 'df_data shape:',df_data.shape
 
-metric_dict={'gtpv1sum': 4, 'imsisum': 6, 'countUL': 3, 'mapsum': 7, 'gtpv2sum': 5, 'countCL': 0, 'countSAI': 1, 'countUGL': 2}
+metric_dict ={'countUL': 4, 'imsiSum': 6, 'countCL': 1, 'createPdpCountV2': 0, 'createPdpCountV1': 5, 'mapsum': 7, 'countmapsum': 7, 'countSAI': 2, 'countUGL': 3}
 reversed_metric_dict = dict(zip(metric_dict.values(), metric_dict.keys()))
 
 dayofweek_dict={'Monday': 0, 'Tuesday': 1, 'Wednsday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
