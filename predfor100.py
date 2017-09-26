@@ -32,6 +32,14 @@ with tf.Session() as sess:
   new_saver.restore(sess,save_path)
   pred=tf.get_collection('pred')[0]
   sMAPError=tf.get_collection('sMAPError')[0]
+
+  accountid_inputs=tf.get_collection('accountid_inputs')[0]
+  dayofweek_inputs=tf.get_collection('dayofweek_inputs')[0]
+
+  metric_inputs=tf.get_collection('metric_inputs')[0]
+  ts_inputs=tf.get_collection('ts_inputs')[0]
+  train_labels=tf.get_collection('train_labels')[0]
+
   #print MODELNAME+str(subnum)+'  restored-->',' input dimention:',x.shape,', output dimention:',pred.shape
   feed_input = {ts_inputs: batch_ts, accountid_inputs: batch_accountid,metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek}
   feed_valid=feed_input.update({train_labels:batch_labels})
