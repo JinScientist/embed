@@ -28,6 +28,6 @@ Raw training data should be CSV file located in the 'csvdata' directory in the s
 ## Train model and upload to S3 for multi accounts with multi metric
     
     $ sudo chmod +x ./train.sh
-    $ ./train.sh
+    $ ./train.sh > ./trainemblog.txt
 
 
