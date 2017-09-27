@@ -25,7 +25,7 @@ Raw training data should be CSV file located in the 'csvdata' directory in the s
 * predfor100.py: load trained model file from S3 and run prediction
 
 
-## Training service
+## Train model and upload to S3 for multi accounts with multi metric
 
     $ ./train.sh
 
