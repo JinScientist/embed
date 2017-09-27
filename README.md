@@ -1,15 +1,15 @@
 # CAMP-ANN-training
 
 ## Summary
-Prototype of neural network training service and prediction API
+Prototype of neural network training service and prediction API for usage time series prediction
 
 ## Requirements
 
-For training EC2 with GPU accelator, tensorflow,cuda kit,pandas are required. 
+For training EC2 with GPU accelator, Tensorflow,Cuda kit,Pandas are required. 
 
 ## Raw training data
 
-Raw training data should be CSV file located in the 'csvdata' directory in the same loation as the programm. 
+Raw feature data should be CSV file located in the 'csvdata' directory in the same loation as the programm. SQL script for aggregating and pre-formatting raw feature data from Athena is in 'top100acc8metrics.sql'
 
 ## Programm list
 
