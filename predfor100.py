@@ -3,10 +3,12 @@
 import boto3
 import re
 import os
+import pandas as pd
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #Hide messy TensorFlow warnings
 import tensorflow as tf
 import numpy as np
-
+from dep import metric_dict,reversed_metric_dict,reversed_dayofweek_dict,dayofweek_dict,df_acc_dict,acc_dict
+import dep
 
 s3 = boto3.resource('s3')
 bucket=s3.Bucket('camp-neuralnet-model-prod')
@@ -21,8 +23,12 @@ for result in results:
     filename=re.sub('^'+prefix, '', key)
     bucket.download_file(file.get('Key'), './modelfile/'+filename)
 
-#batch_ts,batch_accountid,batch_metric,batch_dayofweek,batch_labels = generate_batch(
-#        df_shuffle,batch_size,data_index)
+csvdir_data='./csvdata/allacc8metrics_synth_valid.csv' 
+
+df_input_raw = pd.read_csv(csvdir_data,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
+print 'load csv file finish'
+
+idx=pd.IndexSlice
 
 
 with tf.Session() as sess:
@@ -40,16 +46,17 @@ with tf.Session() as sess:
   ts_inputs=tf.get_collection('ts_inputs')[0]
   train_labels=tf.get_collection('train_labels')[0]
 
-  #print MODELNAME+str(subnum)+'  restored-->',' input dimention:',x.shape,', output dimention:',pred.shape
-  feed_input = {ts_inputs: batch_ts, accountid_inputs: batch_accountid,metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek}
-  feed_valid=feed_input.update({train_labels:batch_labels})
-  predictions=pred.eval(feed_input)
-  #print 'predictions shape:',predictions.shape
+# valid 100 accounts in loop
+  for accountid in acc_dict.keys():
+    df_valid_1account=df_input_raw.loc[idx[accountid,:,:],:]
   
-  predict_SMAPE=sess.run(sMAPError,feed_dict=feed_valid)
-  tspredict=np.concatenate((tspredict,predictions),axis=1)
-
-  SMAPEfinal=np.mean(predict_SMAPE)
-  print "Final SMAPE:",SMAPEfinal
-
-
+    batch_ts,batch_accountid,batch_metric,batch_dayofweek,batch_labels=dep.  generate_batch(df_valid_1account,df_valid_1account.shape[0],data_index=0)
+  
+    feed_input = {ts_inputs: batch_ts,accountid_inputs:batch_accountid,metric_inputs:  batch_metric,dayofweek_inputs:batch_dayofweek}
+    predictions=pred.eval(feed_input)
+    
+    feed_valid=feed_input
+    feed_valid[train_labels] = batch_labels
+    predict_SMAPE=sess.run(sMAPError,feed_dict=feed_valid)
+    accountname=acc_dict[accountid]
+    print 'SMAPE:',predict_SMAPE,'  ',accountname,'  predictions shape:',predictions.shape

@@ -10,17 +10,11 @@ import matplotlib.lines as mlines
 from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoint_file
 import pandas as pd
 import datetime
+from dep import metric_dict,reversed_metric_dict,reversed_dayofweek_dict,dayofweek_dict,df_acc_dict,acc_dict
   
 #The csv file was already synthesized by run 'synth9metrics.py'  
 csvdir_data='./csvdata/allacc8metrics_synth.csv' 
-csvdir_acc_dict='./csvdata/acc100_dict.csv' 
 
-df_acc_dict = pd.read_csv(csvdir_acc_dict,header=0, skipinitialspace=True,
-  dtype={"accountid": np.int32,'accountname':object},engine='c')
-
-acc_dict= dict()
-for i in range(100):
-  acc_dict[df_acc_dict.loc[i]['accountid']] = df_acc_dict.loc[i]['accountname']
 
 print df_acc_dict[df_acc_dict['accountid']==135462906]['accountname']  # use this instead as dict() has encoder problems
 
@@ -28,11 +22,6 @@ df_data = pd.read_csv(csvdir_data,parse_dates=True,index_col=['accountid_idx','m
 
 print 'df_data shape:',df_data.shape
 
-metric_dict ={'countUL': 4, 'imsiSum': 6, 'countCL': 1, 'createPdpCountV2': 0, 'createPdpCountV1': 5, 'mapsum': 7, 'countmapsum': 7, 'countSAI': 2, 'countUGL': 3}
-reversed_metric_dict = dict(zip(metric_dict.values(), metric_dict.keys()))
-
-dayofweek_dict={'Monday': 0, 'Tuesday': 1, 'Wednsday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
-reversed_dayofweek_dict = dict(zip(dayofweek_dict.values(), dayofweek_dict.keys()))
 
 #df_train=df_train.loc[8]
 idx=pd.IndexSlice
