@@ -9,7 +9,7 @@ For training EC2 with GPU accelator, Tensorflow,Cuda kit,Pandas are required.
 
 ## Raw training data
 
-Raw feature data should be CSV file located in the 'csvdata' directory in the same loation as the programm. SQL script for aggregating and pre-formatting raw feature data from Athena is in 'top100acc8metrics.sql'
+Raw feature data should be CSV file located in the 'csvdata' directory in the same loation as the programm. SQL script for aggregating and pre-formatting raw feature data from Athena is in 'query_for_training.sql'
 
 ## Programm list
 

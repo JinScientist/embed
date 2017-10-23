@@ -13,21 +13,20 @@ import datetime
 from dep import metric_dict,reversed_metric_dict,reversed_dayofweek_dict,dayofweek_dict,df_acc_dict,acc_dict
   
 #The csv file was already synthesized by run 'synth9metrics.py'  
-csvdir_data='./csvdata/allacc8metrics_synth.csv' 
-
+csvdir_data_train='./csvdata/allacc8metrics_synth_train.csv' 
+csvdir_data_valid='./csvdata/allacc8metrics_synth_valid.csv' 
 
 print df_acc_dict[df_acc_dict['accountid']==135462906]['accountname']  # use this instead as dict() has encoder problems
 
-df_data = pd.read_csv(csvdir_data,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
-
-print 'df_data shape:',df_data.shape
+df_data_train = pd.read_csv(csvdir_data_train,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
+df_data_train = pd.read_csv(csvdir_data_valid,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
 
 
 #df_train=df_train.loc[8]
 idx=pd.IndexSlice
-df_train=df_data.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
+df_train=df_data_train.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
 
-df_valid=df_data.loc[idx[109351305,:,slice('2017-07-01 00','2017-07-07 23')],:] # Telit
+df_valid=df_data_valid.loc[idx[109351305,:,slice('2017-07-01 00','2017-07-07 23')],:] # Telit
 #df_valid=df_data.loc[idx[118035406,:,slice('2017-07-01 00','2017-07-07 23')],:] # Latvi Energo
 #df_valid=df_data.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]
 

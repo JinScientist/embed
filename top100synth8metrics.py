@@ -9,9 +9,47 @@ import matplotlib.lines as mlines
 from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoint_file
 import pandas as pd
 import datetime
-  
+import time
+import boto3
+import s3fs
+
+def query():
+	bucket.objects.filter(Prefix="prediction/training-data").delete()
+
+	with open('query_for_training.sql', 'r') as sqlfile:
+		sql=sqlfile.read().replace('\n', ' ')
+	print sql
+	response = clientAthena.start_query_execution(
+	    QueryString=sql,
+	    ResultConfiguration={
+	        'OutputLocation': 's3://camp-neuralnet-model-prod/prediction/training-data'
+	    }
+	)
+	return response['QueryExecutionId']
+
+s3 = boto3.resource('s3')
+bucketname='camp-neuralnet-model-prod'
+bucket=s3.Bucket(bucketname)
+clientAthena = boto3.client('athena','eu-west-1')
+query_exc_id=query()
+
+#wait until athena finish
+while True:
+	time.sleep(3)
+	queryState = clientAthena.get_query_execution(
+   	QueryExecutionId=query_exc_id)['QueryExecution']['Status']['State']
+	if queryState== 'SUCCEEDED':
+		print 'query state:',queryState
+		break
+	print 'query state:',queryState
+
+for obj in bucket.objects.filter(Prefix='prediction/training-data'):
+	key=obj.key
+	break
+print key
 #The csv file was already synthesized by SQL script  
-csvdir='./csvdata/top100_8metrics.csv' 
+csvdir='s3://'+bucketname+'/'+key 
+
 
 COLUMNS = ["accountid","hourstamp", "day_of_week", "metric","value"]
 def dateparse_fn (timestampes):    
