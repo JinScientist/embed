@@ -35,7 +35,7 @@ query_exc_id=query()
 
 #wait until athena finish
 while True:
-	time.sleep(3)
+	time.sleep(5)
 	queryState = clientAthena.get_query_execution(
    	QueryExecutionId=query_exc_id)['QueryExecution']['Status']['State']
 	if queryState== 'SUCCEEDED':
