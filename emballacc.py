@@ -19,7 +19,7 @@ csvdir_data_valid='./csvdata/allacc8metrics_synth_valid.csv'
 print df_acc_dict[df_acc_dict['accountid']==135462906]['accountname']  # use this instead as dict() has encoder problems
 
 df_data_train = pd.read_csv(csvdir_data_train,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
-df_data_train = pd.read_csv(csvdir_data_valid,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
+df_data_valid = pd.read_csv(csvdir_data_valid,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
 
 
 #df_train=df_train.loc[8]
@@ -45,7 +45,7 @@ lag_size=672        # input window size of time series
 sig_size=lag_size+relu_size
 step_size=168
 batch_size=26880  # total sample size 134400 per week
-num_steps = 5  
+num_steps = 5
 epoch=2000
 
 def perc (input,size_in,size_out,act_func,name="perc"):

@@ -98,14 +98,15 @@ for i in range(672+168):
   #else: 
   #  s.columns=[('p%s' % (i-671))]  
   df_empty[i]=s_inloop
-  print df_empty.loc[(109351305,1,'2017-05-01')] # telit id
+  if i%5==0:print 'reformat progress: ', "{0:.2f}%".format(i/840.0 * 100)
+  #print df_empty.loc[(109351305,1,'2017-05-01')] # telit id
 df=pd.concat([df_sy,df_empty],axis=1)
 print df.loc[(109351305,1,'2017-05-01')]
 # slice to filter out NaN
 
 #all 9 metric has full tracked ts data with this time window
 df=df.drop('value',axis=1)
-df_sample=df.loc[idx[:,:,slice('2017-05-01 00','2017-06-20 23')],:]   
+df_sample=df.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]   
 df_valid=df.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]  
 
 df_sample.to_csv("./csvdata/allacc8metrics_synth_train.csv")
