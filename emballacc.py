@@ -21,16 +21,15 @@ print df_acc_dict[df_acc_dict['accountid']==135462906]['accountname']  # use thi
 df_data_train = pd.read_csv(csvdir_data_train,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
 df_data_valid = pd.read_csv(csvdir_data_valid,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
 
-
 #df_train=df_train.loc[8]
 idx=pd.IndexSlice
-df_train=df_data_train.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
+#df_train=df_data_train.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
 
-df_valid=df_data_valid.loc[idx[109351305,:,slice('2017-07-01 00','2017-07-07 23')],:] # Telit
+df_valid=df_data_valid.loc[idx[109351305,:,:],:] # Telit
 #df_valid=df_data.loc[idx[118035406,:,slice('2017-07-01 00','2017-07-07 23')],:] # Latvi Energo
 #df_valid=df_data.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]
 
-df_shuffle=df_train.sample(n=df_train.shape[0])
+df_shuffle=df_data_train.sample(n=df_data_train.shape[0])
 
 lag_columns=list(np.arange(672).astype(str))
 future_columns=list((np.arange(168)+672).astype(str))
@@ -90,22 +89,19 @@ with graph.as_default():
   accountid_dataset = tf.constant(df_acc_dict['accountid'].values,dtype=tf.int32) # for valid the embeding learning
   metric_dataset = tf.constant(np.arange(8),dtype=tf.int32)
   dayofweek_dataset=tf.constant(np.arange(7),dtype=tf.int32)
-  # Ops and variables pinned to the CPU or GPU
-  with tf.device('/gpu:0'):
-    #logarithm normlization
-    ts_inputs_log=tf.log(ts_inputs)   #avoid log on algorithm
-    train_labels_log=tf.log(train_labels)
 
-    # Look up embeddings for inputs.
-    accountid_embeddings = tf.Variable(tf.random_uniform([100, emsize_accountid], -1.0, 1.0,dtype=tf.float32))
-    accountid_embed = tf.nn.embedding_lookup(accountid_embeddings, accountid_inputs)
 
-    metric_embeddings = tf.Variable(tf.random_uniform([8, emsize_metric], -1.0, 1.0,dtype=tf.float32))
-    metric_embed = tf.nn.embedding_lookup(metric_embeddings, metric_inputs)
-
-    dayofweek_embeddings = tf.Variable(tf.random_uniform([7, emsize_dayofweek], -1.0, 1.0,dtype=tf.float32))
-    dayofweek_embed = tf.nn.embedding_lookup(dayofweek_embeddings, dayofweek_inputs)
-    embed=tf.concat([accountid_embed,metric_embed,dayofweek_embed],1)
+  #logarithm normlization
+  ts_inputs_log=tf.log(ts_inputs)   #avoid log on algorithm
+  train_labels_log=tf.log(train_labels)
+  # Look up embeddings for inputs.
+  accountid_embeddings = tf.Variable(tf.random_uniform([100, emsize_accountid], -1.0, 1.0,dtype=tf.float32))
+  accountid_embed = tf.nn.embedding_lookup(accountid_embeddings, accountid_inputs)
+  metric_embeddings = tf.Variable(tf.random_uniform([8, emsize_metric], -1.0, 1.0,dtype=tf.float32))
+  metric_embed = tf.nn.embedding_lookup(metric_embeddings, metric_inputs)
+  dayofweek_embeddings = tf.Variable(tf.random_uniform([7, emsize_dayofweek], -1.0, 1.0,dtype=tf.float32))
+  dayofweek_embed = tf.nn.embedding_lookup(dayofweek_embeddings, dayofweek_inputs)
+  embed=tf.concat([accountid_embed,metric_embed,dayofweek_embed],1)
 
   with tf.name_scope('relu1'):  
     relu1=perc(embed,embeddings_size,relu_size,act_func='relu')

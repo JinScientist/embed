@@ -55,7 +55,7 @@ COLUMNS = ["accountid","hourstamp", "day_of_week", "metric","value"]
 def dateparse_fn (timestampes):    
   return pd.to_datetime(timestampes,format='%Y-%m-%d %H')
 df_train = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
-  date_parser=dateparse_fn,index_col='hourstamp',header=0, skipinitialspace=True,dtype={"accountid": np.int32})
+  date_parser=dateparse_fn,index_col='hourstamp',header=0, skipinitialspace=True,dtype={"accountid": str})
 
 
 # avoid zero value for logrithm normalization later
@@ -73,7 +73,7 @@ df_train.insert(3,'metric_dict',df_train['metric'].map(metric_dict))
 ds=df_train.set_index(['accountid','metric_dict',df_train.index]).loc[:,['value']]
 
 #fill up empty rows in the time series
-iterables=[accountid_array,metric_dict.values(),pd.date_range('2017-05-01', '2017-08-31',freq='1h',closed='left')]
+iterables=[accountid_array,metric_dict.values(),pd.date_range('2017-07-01', '2017-10-31',freq='1h',closed='left')]
 index= pd.MultiIndex.from_product(iterables,names=['accountid_idx','metric_idx','hourstamp'])
 df_sy= ds.reindex(index, fill_value=np.finfo(np.float32).eps)
 df_sy['accountid']=df_sy.index.get_level_values(0)
@@ -101,13 +101,12 @@ for i in range(672+168):
   if i%5==0:print 'reformat progress: ', "{0:.2f}%".format(i/840.0 * 100)
   #print df_empty.loc[(109351305,1,'2017-05-01')] # telit id
 df=pd.concat([df_sy,df_empty],axis=1)
-print df.loc[(109351305,1,'2017-05-01')]
 # slice to filter out NaN
 
 #all 9 metric has full tracked ts data with this time window
 df=df.drop('value',axis=1)
-df_sample=df.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]   
-df_valid=df.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]  
+df_sample=df.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]   
+df_valid=df.loc[idx[:,:,slice('2017-09-01 00','2017-09-07 23')],:]  
 
 df_sample.to_csv("./csvdata/allacc8metrics_synth_train.csv")
 df_valid.to_csv("./csvdata/allacc8metrics_synth_valid.csv")
