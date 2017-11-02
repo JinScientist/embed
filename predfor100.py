@@ -51,7 +51,11 @@ with tf.Session() as sess:
     df_valid_1account=df_input_raw.loc[idx[accountid,:,:],:]
   
     batch_ts,batch_accountid,batch_metric,batch_dayofweek,batch_labels=dep.  generate_batch(df_valid_1account,df_valid_1account.shape[0],data_index=0)
-  
+    #batch_accountid=batch_accountid.as_matrix()
+    #batch_ts=batch_ts.as_matrix()
+    #batch_dayofweek=batch_dayofweek.as_matrix()
+    #batch_metric=batch_metric.as_matrix()
+    #batch_labels=batch_labels.as_matrix()
     feed_input = {ts_inputs: batch_ts,accountid_inputs:batch_accountid,metric_inputs:  batch_metric,dayofweek_inputs:batch_dayofweek}
     predictions=pred.eval(feed_input)
     
