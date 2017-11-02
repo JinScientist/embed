@@ -4,8 +4,6 @@ import tensorflow as tf
 import sys
 import shutil
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
 from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoint_file
 import pandas as pd
 import datetime

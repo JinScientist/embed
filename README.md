@@ -28,6 +28,6 @@ Raw feature data should be CSV file located in the 'csvdata' directory in the sa
 ## Train model and upload to S3 for multi accounts with multi metric
     
     $ sudo chmod +x ./train.sh
-    $ ./train.sh > ./train_log.txt
+    $ ./train.sh
 
 

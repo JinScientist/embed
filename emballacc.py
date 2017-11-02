@@ -95,8 +95,8 @@ with graph.as_default():
   ts_inputs_log=tf.log(ts_inputs)   #avoid log on algorithm
   train_labels_log=tf.log(train_labels)
   # Look up embeddings for inputs.
-  accountid_embeddings = tf.Variable(tf.random_uniform([100, emsize_accountid], -1.0, 1.0,dtype=tf.float32))
-  accountid_embed = tf.nn.embedding_lookup(accountid_embeddings, accountid_inputs)
+  accountid_embeddings = tf.Variable(tf.random_uniform([100, emsize_accountid], -1.0, 1.0,dtype=tf.float32)) 
+  accountid_embed = tf.nn.embedding_lookup(accountid_embeddings, accountid_inputs,validate_indices=False)
   metric_embeddings = tf.Variable(tf.random_uniform([8, emsize_metric], -1.0, 1.0,dtype=tf.float32))
   metric_embed = tf.nn.embedding_lookup(metric_embeddings, metric_inputs)
   dayofweek_embeddings = tf.Variable(tf.random_uniform([7, emsize_dayofweek], -1.0, 1.0,dtype=tf.float32))
