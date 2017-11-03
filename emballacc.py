@@ -5,27 +5,25 @@ import tensorflow as tf
 import sys
 import shutil
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
 from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoint_file
 import pandas as pd
 import datetime
-from dep import metric_dict,reversed_metric_dict,reversed_dayofweek_dict,dayofweek_dict,df_acc_dict,acc_dict
-  
+from dep import metric_dict,reversed_metric_dict,reversed_dayofweek_dict,dayofweek_dict,df_acc_dict,acc_dict,acc_int_dict
+import dep
 #The csv file was already synthesized by run 'synth9metrics.py'  
 csvdir_data_train='./csvdata/allacc8metrics_synth_train.csv' 
 csvdir_data_valid='./csvdata/allacc8metrics_synth_valid.csv' 
 
 print df_acc_dict[df_acc_dict['accountid']==135462906]['accountname']  # use this instead as dict() has encoder problems
 
-df_data_train = pd.read_csv(csvdir_data_train,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
-df_data_valid = pd.read_csv(csvdir_data_valid,parse_dates=True,index_col=['accountid_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
+df_data_train = pd.read_csv(csvdir_data_train,parse_dates=True,index_col=['account_int_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
+df_data_valid = pd.read_csv(csvdir_data_valid,parse_dates=True,index_col=['account_int_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
 
 #df_train=df_train.loc[8]
 idx=pd.IndexSlice
 #df_train=df_data_train.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
 
-df_valid=df_data_valid.loc[idx[109351305,:,:],:] # Telit
+df_valid=df_data_valid.loc[idx[acc_int_dict[109351305],:,:],:] # Telit
 #df_valid=df_data.loc[idx[118035406,:,slice('2017-07-01 00','2017-07-07 23')],:] # Latvi Energo
 #df_valid=df_data.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]
 
@@ -96,7 +94,7 @@ with graph.as_default():
   train_labels_log=tf.log(train_labels)
   # Look up embeddings for inputs.
   accountid_embeddings = tf.Variable(tf.random_uniform([100, emsize_accountid], -1.0, 1.0,dtype=tf.float32)) 
-  accountid_embed = tf.nn.embedding_lookup(accountid_embeddings, accountid_inputs,validate_indices=False,name='lookup_accountid')
+  accountid_embed = tf.nn.embedding_lookup(accountid_embeddings, accountid_inputs,name='lookup_accountid')
   metric_embeddings = tf.Variable(tf.random_uniform([8, emsize_metric], -1.0, 1.0,dtype=tf.float32))
   metric_embed = tf.nn.embedding_lookup(metric_embeddings, metric_inputs)
   dayofweek_embeddings = tf.Variable(tf.random_uniform([7, emsize_dayofweek], -1.0, 1.0,dtype=tf.float32))
@@ -161,16 +159,6 @@ with graph.as_default():
   tf.add_to_collection('ts_inputs',ts_inputs)
   tf.add_to_collection('train_labels',train_labels)
 
-def generate_batch(data,batch_size,data_index):
-  assert data_index < data.shape[0],"data_index:%s is larger than sample data size" % data_index
-  batch_all=data[data_index:data_index+batch_size]
-  batch_ts=batch_all.loc[:,lag_columns]
-  batch_accountid=batch_all.loc[:,'accountid']
-  batch_metric=batch_all.loc[:,'metric']
-  batch_dayofweek=batch_all.loc[:,'dayofweek']
-  batch_labels=batch_all.loc[:,future_columns]
-  return batch_ts,batch_accountid,batch_metric,batch_dayofweek,batch_labels
-
 
 with tf.Session(graph=graph) as session:
   # We must initialize all variables before we use them.
@@ -178,16 +166,16 @@ with tf.Session(graph=graph) as session:
   print('Initialized')
   data_index = 0
   #pre generate the validation batch
-  valid_ts,valid_accountid, valid_metric,valid_dayofweek,valid_labels = generate_batch(
+  valid_ts,valid_account_init, valid_metric,valid_dayofweek,valid_labels = dep.generate_batch(
     df_valid,batch_size=df_valid.shape[0],data_index=0)
-  feed_valid = {ts_inputs: valid_ts, accountid_inputs: valid_accountid, metric_inputs: valid_metric, dayofweek_inputs:valid_dayofweek, train_labels: valid_labels}
+  feed_valid = {ts_inputs: valid_ts, accountid_inputs: valid_account_init, metric_inputs: valid_metric, dayofweek_inputs:valid_dayofweek, train_labels: valid_labels}
   #Train start
   for step in xrange(num_steps):
-    batch_ts,batch_accountid,batch_metric,batch_dayofweek,batch_labels = generate_batch(
+    batch_ts,batch_account_int,batch_metric,batch_dayofweek,batch_labels = dep.generate_batch(
         df_shuffle,batch_size,data_index)
     print 'batch number %s is generated' % step
     data_index=data_index+batch_size                  # generate different batch data for each training step? 
-    feed_train = {ts_inputs: batch_ts, accountid_inputs: batch_accountid,metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek, train_labels: batch_labels}
+    feed_train = {ts_inputs: batch_ts, accountid_inputs: batch_account_int,metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek, train_labels: batch_labels}
     # We perform one update step by evaluating the optimizer op (including it
     # in the list of returned values for session.run()
     for sub_step in xrange(epoch):

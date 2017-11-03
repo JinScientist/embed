@@ -37,9 +37,9 @@ where accountid in (select accountid from top100) and (month,year) in (select * 
 GROUP BY 1,2,3
 union
 SELECT accountid,date_trunc('hour',stoptime) AS hourstamp,
-'createPdpCountV2' as metric,
-SUM(CASE WHEN causecode= 128 AND recordtype = 1 THEN 1 ELSE 0 END) AS value
-FROM signaling_20171018_112152.gtpv2
+'deletePdpCountV1' as metric,
+SUM(CASE WHEN causecode= 128 AND recordtype = 2 THEN 1 ELSE 0 END) AS value
+FROM signaling_20171018_112152.gtpv1 
 where accountid in (select accountid from top100) and (month,year) in (select * from months)
 GROUP BY 1,2,3
 ),

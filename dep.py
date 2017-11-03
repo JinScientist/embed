@@ -10,8 +10,13 @@ acc_dict= dict()
 for i in range(100):
   acc_dict[df_acc_dict.loc[i]['accountid']] = df_acc_dict.loc[i]['accountname']
 
-metric_dict ={'countUL': 4, 'imsiSum': 6, 'countCL': 1, 'createPdpCountV2': 0, 'createPdpCountV1': 5, 
-'mapsum': 7,'countSAI': 2, 'countUGL': 3}
+#create dictionary for account_int colomn;
+acc_int_dict = dict()
+for accountid in acc_dict.keys():
+  acc_int_dict[accountid] = len(acc_int_dict)
+
+metric_dict ={'countUL': 0, 'imsiSum': 1, 'countCL': 2, 'deletePdpCountV1': 3, 'createPdpCountV1': 4, 
+'mapsum': 5,'countSAI': 6, 'countUGL': 7}
 
 reversed_metric_dict = dict(zip(metric_dict.values(), metric_dict.keys()))
 
@@ -23,7 +28,7 @@ def generate_batch(data,batch_size,data_index):
   assert data_index < data.shape[0],"data_index:%s is larger than sample data size" % data_index
   batch_all=data[data_index:data_index+batch_size]
   batch_ts=batch_all.loc[:,lag_columns]
-  batch_accountid=batch_all.loc[:,'accountid']
+  batch_accountid=batch_all.loc[:,'account_int']
   batch_metric=batch_all.loc[:,'metric']
   batch_dayofweek=batch_all.loc[:,'dayofweek']
   batch_labels=batch_all.loc[:,future_columns]
