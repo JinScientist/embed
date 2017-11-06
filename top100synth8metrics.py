@@ -12,9 +12,11 @@ import boto3
 import s3fs
 from dep import acc_dict,metric_dict,acc_int_dict
 
-RUN_SQL_FLAG= False
+RUN_SQL_FLAG= True
+s3 = boto3.resource('s3')
 bucketname='camp-neuralnet-model-prod'
-
+bucket=s3.Bucket(bucketname)
+clientAthena = boto3.client('athena','eu-west-1')
 def query():
 	bucket.objects.filter(Prefix="prediction/training-data").delete()
 
@@ -29,21 +31,18 @@ def query():
 	)
 	return response['QueryExecutionId']
 def run_sql():
-  s3 = boto3.resource('s3')
-
-  bucket=s3.Bucket(bucketname)
-  clientAthena = boto3.client('athena','eu-west-1')
-  query_exc_id=query()
-  
-  #wait until athena finish
-  while True:
-  	time.sleep(5)
-  	queryState = clientAthena.get_query_execution(
-     	QueryExecutionId=query_exc_id)['QueryExecution']['Status']['State']
-  	if queryState== 'SUCCEEDED':
-  		print 'query state:',queryState
-  		break
-  	print 'query state:',queryState
+  if RUN_SQL_FLAG==True:
+    query_exc_id=query()
+    
+    #wait until athena finish
+    while True:
+    	time.sleep(5)
+    	queryState = clientAthena.get_query_execution(
+       	QueryExecutionId=query_exc_id)['QueryExecution']['Status']['State']
+    	if queryState== 'SUCCEEDED':
+    		print 'query state:',queryState
+    		break
+    	print 'query state:',queryState
   
   for obj in bucket.objects.filter(Prefix='prediction/training-data'):
   	key=obj.key
@@ -51,9 +50,7 @@ def run_sql():
   print key
   return key
 
-if RUN_SQL_FLAG==True:
-	key=run_sql()
-else: key='prediction/training-data/feac38cf-29c9-41ed-b491-df963f94921a.csv'
+key=run_sql()
 
 #The csv file was already synthesized by SQL script  
 csvdir='s3://'+bucketname+'/'+key 
@@ -61,7 +58,7 @@ COLUMNS = ["accountid","hourstamp", "day_of_week", "metric","value"]
 def dateparse_fn (timestampes):    
   return pd.to_datetime(timestampes,format='%Y-%m-%d %H')
 df_train = pd.read_csv(csvdir, names=COLUMNS,parse_dates=True,
-  date_parser=dateparse_fn,index_col='hourstamp',header=0, skipinitialspace=True,dtype={"accountid": np.int32})
+  date_parser=dateparse_fn,index_col='hourstamp',header=0, skipinitialspace=True,dtype={"accountid": str})
 
 
 # avoid zero value for logrithm normalization later
@@ -99,7 +96,7 @@ for i in range(672+168):
   #if i < 671:
     #s_inloop.columns=[('h%s' % (i+1))]    
   #else: 
-  #  s.columns=[('p%s' % (i-671))]  
+  #  s.columns=[('p%s' % (i-671))]
   df_empty[i]=s_inloop
   if i%5==0:print 'reformat progress: ', "{0:.2f}%".format(i/840.0 * 100)
   #print df_empty.loc[(109351305,1,'2017-05-01')] # telit id

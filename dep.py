@@ -1,22 +1,24 @@
-import pandas as pd
 import numpy as np
+import csv
 
 csvdir_acc_dict='./csvdata/acc100_dict.csv' 
 
-df_acc_dict = pd.read_csv(csvdir_acc_dict,header=0, skipinitialspace=True,
-  dtype={"accountid": np.int32,'accountname':object},engine='c')
+reader = csv.reader(open(csvdir_acc_dict))
 
 acc_dict= dict()
-for i in range(100):
-  acc_dict[df_acc_dict.loc[i]['accountid']] = df_acc_dict.loc[i]['accountname']
+for row in reader:
+  key = row[0]
+  acc_dict[key] = row[1]
+
+acc_dict.pop('accountid')
 
 #create dictionary for account_int colomn;
 acc_int_dict = dict()
 for accountid in acc_dict.keys():
   acc_int_dict[accountid] = len(acc_int_dict)
+#print acc_int_dict
 
-metric_dict ={'countUL': 0, 'imsiSum': 1, 'countCL': 2, 'deletePdpCountV1': 3, 'createPdpCountV1': 4, 
-'mapsum': 5,'countSAI': 6, 'countUGL': 7}
+metric_dict ={'countUL': 0, 'imsiSum': 1, 'countCL': 2, 'deletePdpCountV1': 3, 'createPdpCountV1': 4,'mapsum': 5,'countSAI': 6, 'countUGL': 7}
 
 reversed_metric_dict = dict(zip(metric_dict.values(), metric_dict.keys()))
 

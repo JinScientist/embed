@@ -8,22 +8,22 @@ import numpy as np
 from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoint_file
 import pandas as pd
 import datetime
-from dep import metric_dict,reversed_metric_dict,reversed_dayofweek_dict,dayofweek_dict,df_acc_dict,acc_dict,acc_int_dict
+from dep import metric_dict,reversed_metric_dict,reversed_dayofweek_dict,dayofweek_dict,acc_dict,acc_int_dict
 import dep
 #The csv file was already synthesized by run 'synth9metrics.py'  
 csvdir_data_train='./csvdata/allacc8metrics_synth_train.csv' 
 csvdir_data_valid='./csvdata/allacc8metrics_synth_valid.csv' 
 
-print df_acc_dict[df_acc_dict['accountid']==135462906]['accountname']  # use this instead as dict() has encoder problems
-
+print 'load training and validation data from csv file...'
 df_data_train = pd.read_csv(csvdir_data_train,parse_dates=True,index_col=['account_int_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
 df_data_valid = pd.read_csv(csvdir_data_valid,parse_dates=True,index_col=['account_int_idx','metric_idx','hourstamp'],header=0, skipinitialspace=True,engine='c')
 
+print 'load csv train and validation data finish.'
 #df_train=df_train.loc[8]
 idx=pd.IndexSlice
 #df_train=df_data_train.loc[idx[:,:,slice('2017-05-01 00','2017-05-07 23')],:]
 
-df_valid=df_data_valid.loc[idx[acc_int_dict[109351305],:,:],:] # Telit
+df_valid=df_data_valid.loc[idx[acc_int_dict['109351305'],:,:],:] # Telit
 #df_valid=df_data.loc[idx[118035406,:,slice('2017-07-01 00','2017-07-07 23')],:] # Latvi Energo
 #df_valid=df_data.loc[idx[:,:,slice('2017-07-01 00','2017-07-07 23')],:]
 
@@ -84,7 +84,7 @@ with graph.as_default():
   ts_inputs = tf.placeholder(tf.float32, shape=[None,lag_size])
   train_labels = tf.placeholder(tf.float32, shape=[None, step_size])
 
-  accountid_dataset = tf.constant(df_acc_dict['accountid'].values,dtype=tf.int32) # for valid the embeding learning
+  accountid_dataset = tf.constant(acc_int_dict.values(),dtype=tf.int32) # for valid the embeding learning
   metric_dataset = tf.constant(np.arange(8),dtype=tf.int32)
   dayofweek_dataset=tf.constant(np.arange(7),dtype=tf.int32)
 
