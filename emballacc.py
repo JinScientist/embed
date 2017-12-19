@@ -43,7 +43,8 @@ sig_size=lag_size+relu_size
 step_size=168
 batch_size=26880  # total sample size 134400 per week
 num_steps = 5
-epoch=2000
+epoch=20
+lr_adam=1E-02
 
 def perc (input,size_in,size_out,act_func,name="perc"):
     with tf.name_scope('weights'):
@@ -93,7 +94,7 @@ with graph.as_default():
   ts_inputs_log=tf.log(ts_inputs)   #avoid log on algorithm
   train_labels_log=tf.log(train_labels)
   # Look up embeddings for inputs.
-  accountid_embeddings = tf.Variable(tf.random_uniform([100, emsize_accountid], -1.0, 1.0,dtype=tf.float32)) 
+  accountid_embeddings = tf.Variable(tf.random_uniform([100, emsize_accountid], -1.0, 1.0,dtype=tf.float32),name='embed_accountid') 
   accountid_embed = tf.nn.embedding_lookup(accountid_embeddings, accountid_inputs,name='lookup_accountid')
   metric_embeddings = tf.Variable(tf.random_uniform([8, emsize_metric], -1.0, 1.0,dtype=tf.float32))
   metric_embed = tf.nn.embedding_lookup(metric_embeddings, metric_inputs)
@@ -124,7 +125,7 @@ with graph.as_default():
   with tf.name_scope("train"):
     # Construct the SGD optimizer using a learning rate of 1.0.
     optimizer_SGD = tf.train.GradientDescentOptimizer(1.0).minimize(l2loss)
-    optimizer_ADAM=tf.train.AdamOptimizer(1E-4).minimize(l2loss,global_step=global_step)
+    optimizer_ADAM=tf.train.AdamOptimizer(lr_adam).minimize(l2loss,global_step=global_step)
   # Compute the cosine similarity between valid dataset and all embeddings.
 
 
@@ -143,10 +144,10 @@ with graph.as_default():
   #valid_embeddings_dayofweek is the same data rows as normalized_embeddings_dayofweek
   # Just in different row order, valid_embeddings_dayofweek is in the order of metric from 0 to 7
   valid_embeddings_dayofweek = tf.nn.embedding_lookup(
-      normalized_embeddings_dayofweek, dayofweek_dataset)
+      normalized_embeddings_dayofweek, dayofweek_dataset,name='lookup_accountid')
   similarity_dayofweek = tf.matmul(
       valid_embeddings_dayofweek, normalized_embeddings_dayofweek, transpose_b=True)
-
+  global_step=tf.train.get_or_create_global_step()
   # Add variable initializer.
   init = tf.global_variables_initializer()
   tf.add_to_collection('pred',target_unnorm)  
@@ -159,67 +160,55 @@ with graph.as_default():
   tf.add_to_collection('ts_inputs',ts_inputs)
   tf.add_to_collection('train_labels',train_labels)
 
+with graph.as_default():
+  sv = tf.train.Supervisor(logdir='./checkpoint_log',save_summaries_secs=1,stop_grace_secs=0,save_model_secs=60)
+  config_proto = tf.ConfigProto(allow_soft_placement=False)
 
-with tf.Session(graph=graph) as session:
-  # We must initialize all variables before we use them.
-  init.run()
-  print('Initialized')
-  data_index = 0
-  #pre generate the validation batch
-  valid_ts,valid_account_init, valid_metric,valid_dayofweek,valid_labels = dep.generate_batch(
-    df_valid,batch_size=df_valid.shape[0],data_index=0)
-  feed_valid = {ts_inputs: valid_ts, accountid_inputs: valid_account_init, metric_inputs: valid_metric, dayofweek_inputs:valid_dayofweek, train_labels: valid_labels}
-  #Train start
-  for step in xrange(num_steps):
-    batch_ts,batch_account_int,batch_metric,batch_dayofweek,batch_labels = dep.generate_batch(
-        df_shuffle,batch_size,data_index)
-    print 'batch number %s is generated' % step
-    data_index=data_index+batch_size                  # generate different batch data for each training step? 
-    feed_train = {ts_inputs: batch_ts, accountid_inputs: batch_account_int,metric_inputs: batch_metric, dayofweek_inputs:batch_dayofweek, train_labels: batch_labels}
-    # We perform one update step by evaluating the optimizer op (including it
-    # in the list of returned values for session.run()
-    for sub_step in xrange(epoch):
-      _,loss_val = session.run([optimizer_ADAM,l2loss], feed_dict=feed_train)
-      if sub_step % 100 == 0:
-        batch_smape=session.run(sMAPError,feed_dict=feed_valid)
-        print 'loss at step ', step, '  sub-step', sub_step,': ', loss_val,'  sMAPE is ', batch_smape
-        if batch_smape<10.5:break #break for each batch,make sure all batch is learnt
-
-
-  #save the model
-  MODELNAME='a100-8metrics'
-  RUN=0
-  checkpoint_path_trained='./models/'+MODELNAME+'/'
-  if not os.path.exists(checkpoint_path_trained):
-    os.makedirs(checkpoint_path_trained)
-  saver=tf.train.Saver()
-  save_path=saver.save(session,checkpoint_path_trained+str(RUN))
-  print("Tained model %s saved in file:%s" % (MODELNAME,save_path))
-
-  sim_metric = similarity_metric.eval()
-  for i in xrange(8):
-    valid_metric = reversed_metric_dict[i]
-    top_k = 3  # number of nearest neighbors
-    nearest = (-sim_metric[i, :]).argsort()[1:top_k + 1]
-    log_str = 'Nearest to %s:' % valid_metric
-    for k in xrange(top_k):
-      close_word = reversed_metric_dict[nearest[k]]
-      log_str = '%s %s,' % (log_str, close_word)
-    print(log_str)
-
-  sim_dayofweek = similarity_dayofweek.eval()
-  for i in xrange(7):
-    valid_dayofweek = reversed_dayofweek_dict[i]
-    top_k = 3  # number of nearest neighbors
-    nearest = (-sim_dayofweek[i, :]).argsort()[1:top_k + 1]
-    log_str = 'Nearest to %s:' % valid_dayofweek
-    for k in xrange(top_k):
-      close_word = reversed_dayofweek_dict[nearest[k]]
-      log_str = '%s %s,' % (log_str, close_word)
-    print(log_str)
-  #final_embeddings = normalized_embeddings.eval()
-
-
+    
+  with sv.managed_session(config=config_proto) as session:
+  #with tf.Session(graph=graph) as session:    
+    # We must initialize all variables before we use them.
+    init.run(session=session)
+    print('Initialized')
+    data_index = 0
+  
+  
+  
+  
+  
+    #pre generate the validation batch
+    valid_ts,valid_account_init, valid_metric,valid_dayofweek,valid_labels = dep.generate_batch(
+      df_valid,batch_size=df_valid.shape[0],data_index=0)
+    feed_valid = {ts_inputs: valid_ts, accountid_inputs: valid_account_init, metric_inputs: valid_metric, 
+    dayofweek_inputs: valid_dayofweek, train_labels: valid_labels}
+    #Train start
+    for step in xrange(num_steps):
+      batch_ts,batch_account_int,batch_metric,batch_dayofweek,batch_labels = dep.generate_batch(
+          df_shuffle,batch_size,data_index)
+      print 'batch number %s is generated' % step
+      data_index=data_index+batch_size                  # generate different batch data for each training step? 
+      feed_train = {ts_inputs: batch_ts, accountid_inputs: batch_account_int,metric_inputs: batch_metric, 
+      dayofweek_inputs: batch_dayofweek, train_labels: batch_labels}
+      # We perform one update step by evaluating the optimizer op (including it
+      # in the list of returned values for session.run()
+      for sub_step in xrange(epoch):
+        _,loss_val = session.run([optimizer_ADAM,l2loss], feed_dict=feed_train)
+        if sub_step % 20 == 0:
+          batch_smape=session.run(sMAPError,feed_dict=feed_valid)
+          print 'loss at step ', step, '  sub-step', sub_step,': ', loss_val,'  sMAPE is ', batch_smape
+          if batch_smape<10.5:break #break for each batch,make sure all batch is learnt   
+    #save the model
+    MODELNAME='a100-8metrics'
+    RUN=0
+    checkpoint_path_trained='./models/'+MODELNAME+'/'
+    if not os.path.exists(checkpoint_path_trained):
+      os.makedirs(checkpoint_path_trained)
+    sv.saver.save(session, checkpoint_path_trained+str(RUN), global_step=sv.global_step)
+    #saver=tf.train.Saver()
+    #save_path=saver.save(session,checkpoint_path_trained+str(RUN))
+    print("Trained model %s saved in file:%s" % (MODELNAME,checkpoint_path_trained+str(RUN)))   
+    sim_metric = similarity_metric.eval()
+  print 'program finish'
 
 
 
