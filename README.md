@@ -1,4 +1,4 @@
-# CAMP-ANN-training
+# IoT Behavior Prediction-Neural Networks-training
 
 ## Summary
 Prototype of neural network training service and prediction API for usage time series prediction
